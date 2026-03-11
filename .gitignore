@@ -47,3 +47,8 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+# add to .gitignore
+**/testdata/**
+**/junk/**
+/.quarto/
+**/*.quarto_ipynb
