@@ -6,11 +6,15 @@
 #' @param outpath Path to save the csvs to defaults to the inpath
 #' @param recursive Bool as to whether to look for all files in directory (`TRUE`) or just the root folder (`FALSE`)
 #' @param pattern a regex pattern of files to test, if `NULL` then will look for all txt files
-#' @param value_as_numeric Save values as numeric, where applicable
+#' @param values_as_numeric Save values as numeric, where applicable
 #' @param clean_names returns janitor-style clean names
+#' @param save_metadata save the metadata as a csv in the outpath, set to NULL to not save
 #' @return Invisibly returns the metadata.
 #' @export
 #'
+#' @importFrom dplyr across
+#' @importFrom tibble as_tibble
+#' @importFrom stats "time"
 
 convertFRDirectory <- function(
   inpath,
@@ -18,7 +22,8 @@ convertFRDirectory <- function(
   recursive = TRUE,
   pattern = NULL,
   values_as_numeric = TRUE,
-  clean_names = FALSE
+  clean_names = TRUE,
+  save_metadata = outpath
 ) {
   if (is.null(pattern)) {
     ls <- list.files(
@@ -92,6 +97,8 @@ convertFRDirectory <- function(
       }
     )
   }
-
+  if (!is.null(save_metadata)) {
+    write.csv(metadata, paste0(save_metadata, "/metadata.csv"))
+  }
   invisible(metadata)
 }

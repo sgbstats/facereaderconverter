@@ -4,13 +4,7 @@
 #' @param output_dir Character scalar. The destination root directory.
 #' @param files      Character vector. File paths under input_dir to be remapped.
 #' @return           Character vector of output file paths (same length as files).
-#' @examples
-#' files <- c(
-#'   "data/raw/run1/a/b/file1.csv",
-#'   "data/raw/run1/c/file2.parquet"
-#' )
-#' map <- map_paths("data/raw/run1", "data/processed/run1", files)
-#' map
+
 map_paths <- function(input_dir, output_dir, files) {
   stopifnot(is.character(input_dir), length(input_dir) == 1L)
   stopifnot(is.character(output_dir), length(output_dir) == 1L)

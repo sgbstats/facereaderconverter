@@ -20,11 +20,3 @@ map_paths(input_dir, output_dir, files)
 \description{
 Map files from an input root to an output root, preserve structure, create dirs.
 }
-\examples{
-files <- c(
-  "data/raw/run1/a/b/file1.csv",
-  "data/raw/run1/c/file2.parquet"
-)
-map <- map_paths("data/raw/run1", "data/processed/run1", files)
-map
-}

@@ -19,6 +19,9 @@ test_that("convertFRFiles", {
   }
   remove_csv_in_dir("testdata", recursive = TRUE, dry_run = FALSE)
   remove_csv_in_dir("junk", recursive = TRUE, dry_run = FALSE)
+  expect_false(file.exists("junk/testdata_detailed.csv"))
+  expect_false(file.exists("junk/testdata_state.csv"))
+  expect_false(file.exists("junk/testdata2/testdata_state2.csv"))
 
   expect_no_error(convertFRFiles("testdata/testdata_detailed.txt"))
   expect_true(file.exists("testdata/testdata_detailed.csv"))
@@ -32,11 +35,15 @@ test_that("convertFRFiles", {
   ))
 
   x = read.csv("testdata/testdata_detailed.csv")
-  expect_equal(class(x$Neutral), "numeric")
+  expect_equal(class(x$neutral), "numeric")
   expect_no_error(convertFRFiles(
     "testdata/testdata_detailed.txt",
     clean_names = TRUE
   ))
+
+  x1 = x |> mutate(time_length = stringr::str_length(video_time))
+  expect_equal(max(x1$time_length, na.rm = T), 12)
+
   x = read.csv("testdata/testdata_detailed.csv")
   expect_all_true(names(x) == names(janitor::clean_names(x)))
 
@@ -70,7 +77,7 @@ test_that("convertFRFiles", {
     "File does not exist: testdata/testdata_detailed_fake.txt"
   )
   expect_error(
-    convertFRFiles("testdata/testdata_detailed fail.txt"),
+    convertFRFiles("testdata/testdata_detailed_fail.txt"),
     "Not a FR file."
   )
 

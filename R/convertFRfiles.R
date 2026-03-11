@@ -7,12 +7,12 @@
 #' @param inpath Path to an existing .txt file.
 #' @param outpath Path to save the csv to defaults to the inpath
 #' @param return_data Bool to return the data from the txt rather than the metadata
-#' @param value_as_numeric Save values as numeric, where applicable
+#' @param values_as_numeric Save values as numeric, where applicable
 #' @param clean_names returns janitor-style clean names
 #' @return Invisibly returns the metadata.
 #' @export
 #'
-#' @importFrom readr read_lines read_delim read_table2 cols col_character col_guess
+#' @importFrom readr read_lines read_delim read_table cols col_character col_guess
 #' @importFrom tools file_ext file_path_sans_ext
 #' @importFrom dplyr case_when mutate
 #' @importFrom stringr str_trim
@@ -45,7 +45,7 @@ convertFRFiles <- function(
   md_type <- dplyr::case_when(
     grepl("detailed", md[1]) ~ "detailed",
     grepl("state", md[1]) ~ "state",
-    .default = "other"
+    TRUE ~ "other"
   )
 
   if (!grepl("video analysis", md[1], ignore.case = TRUE)) {
@@ -106,7 +106,7 @@ convertFRFiles <- function(
       ),
       show_col_types = FALSE
     ),
-    readr::read_table2(
+    readr::read_table(
       inpath,
       skip = 10,
       col_types = cols(

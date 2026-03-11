@@ -10,7 +10,8 @@ convertFRDirectory(
   recursive = TRUE,
   pattern = NULL,
   values_as_numeric = TRUE,
-  clean_names = FALSE
+  clean_names = TRUE,
+  save_metadata = outpath
 )
 }
 \arguments{
@@ -22,9 +23,11 @@ convertFRDirectory(
 
 \item{pattern}{a regex pattern of files to test, if \code{NULL} then will look for all txt files}
 
+\item{values_as_numeric}{Save values as numeric, where applicable}
+
 \item{clean_names}{returns janitor-style clean names}
 
-\item{value_as_numeric}{Save values as numeric, where applicable}
+\item{save_metadata}{save the metadata as a csv in the outpath, set to NULL to not save}
 }
 \value{
 Invisibly returns the metadata.

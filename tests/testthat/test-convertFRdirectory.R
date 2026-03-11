@@ -19,8 +19,12 @@ test_that("convertFRDirectory", {
   }
   remove_csv_in_dir("testdata", recursive = TRUE, dry_run = FALSE)
   remove_csv_in_dir("junk", recursive = TRUE, dry_run = FALSE)
+  expect_false(file.exists("junk/testdata_detailed.csv"))
+  expect_false(file.exists("junk/testdata_state.csv"))
+  expect_false(file.exists("junk/testdata2/testdata_state2.csv"))
 
   expect_no_error(convertFRDirectory("testdata"))
+  expect_true(file.exists("testdata/metadata.csv"))
   expect_true(file.exists("testdata/testdata_detailed.csv"))
   expect_true(file.exists("testdata/testdata_state.csv"))
   expect_true(file.exists("testdata/testdata2/testdata_state2.csv"))
@@ -40,7 +44,7 @@ test_that("convertFRDirectory", {
   expect_true(file.exists("junk/testdata2/testdata_state2.csv"))
 
   x = read.csv("junk/testdata_detailed.csv")
-  expect_equal(class(x$Neutral), "numeric")
+  expect_equal(class(x$neutral), "numeric")
   expect_no_error(convertFRDirectory(
     "testdata",
     clean_names = TRUE
