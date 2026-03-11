@@ -149,7 +149,7 @@ convertFRFiles <- function(
       time = md_time,
       type = md_type,
       inpath = inpath,
-      outpath = outpath
+      outpath = csv_path
     )
     invisible(metadata)
   }

@@ -25,6 +25,9 @@ test_that("convertFRDirectory", {
 
   expect_no_error(convertFRDirectory("testdata"))
   expect_true(file.exists("testdata/metadata.csv"))
+  x = read.csv("testdata/metadata.csv")
+  expect_all_true(grepl("csv", x$outpath[x$status == "Success"]))
+
   expect_true(file.exists("testdata/testdata_detailed.csv"))
   expect_true(file.exists("testdata/testdata_state.csv"))
   expect_true(file.exists("testdata/testdata2/testdata_state2.csv"))

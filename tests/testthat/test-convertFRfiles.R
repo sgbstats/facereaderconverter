@@ -49,7 +49,7 @@ test_that("convertFRFiles", {
 
   x = convertFRFiles("testdata/testdata_detailed.txt")
   expect_true(ncol(x) == 5)
-
+  expect_true(grepl("csv", x$outpath))
   x = convertFRFiles("testdata/testdata_state.txt")
   expect_true(ncol(x) == 5)
 
