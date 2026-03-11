@@ -1,0 +1,55 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# facereaderconverter
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of facereaderconverter is to convert FaceReader txt files to usable csv files that preserve the timings.
+
+## Installation
+
+You can install the development version of facereaderconverter from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("sgbstats/facereaderconverter")
+```
+or
+
+``` r
+# install.packages("devtools")
+devtools::install_github("sgbstats/facereaderconverter")
+```
+
+## Example
+
+This is a basic example which shows you how to solve a common problem:
+
+```{r example,eval = FALSE}
+library(facereaderconverter)
+convertFRFiles("testdata/testdata_detailed.txt")
+#this will convert that file to a csv in the same name and location and apply defult settings
+```
+The default settings are values are returned as numeric/time objects and the names are `janitor`-style `clean_names` so lower case and spaces are replaced with underscores. When `return_data=FALSE` the metadata from the conversion is returned and when it is set to `TRUE` then the function returns the data itself to allow work. If you want to save the file in another location or under another name then specify the outpath.
+
+```{r example2,eval = FALSE}
+library(facereaderconverter)
+convertFRDirectory("testdata")
+#this will convert all txt files in the directory to a csv in the same name and location and apply defult settings
+```
+
+This function takes similar arguments to files function. The new arguments are `recrusive` which when true will look for all files in the whole of the inpath directory. `pattern` which when not null will filter the files to only those matching the regex pattern, e.g., if you only wanted to convert the state files. 
