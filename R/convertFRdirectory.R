@@ -9,6 +9,7 @@
 #' @param values_as_numeric Save values as numeric, where applicable
 #' @param clean_names returns janitor-style clean names
 #' @param save_metadata save the metadata as a csv in the outpath, set to NULL to not save
+#' @param ... arguments passed as necessary
 #' @return Invisibly returns the metadata.
 #' @export
 #'
@@ -23,7 +24,8 @@ convertFRDirectory <- function(
   pattern = NULL,
   values_as_numeric = TRUE,
   clean_names = TRUE,
-  save_metadata = outpath
+  save_metadata = outpath,
+  ...
 ) {
   if (is.null(pattern)) {
     ls <- list.files(
@@ -65,7 +67,8 @@ convertFRDirectory <- function(
           ls[i],
           ls_out[i],
           values_as_numeric = values_as_numeric,
-          clean_names = clean_names
+          clean_names = clean_names,
+          ...
         )
 
         # coerce success-row types to match metadata

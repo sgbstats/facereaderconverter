@@ -9,6 +9,7 @@
 #' @param return_data Bool to return the data from the txt rather than the metadata
 #' @param values_as_numeric Save values as numeric, where applicable
 #' @param clean_names returns janitor-style clean names
+#' @param ... arguments passed as necessary
 #' @return Invisibly returns the metadata.
 #' @export
 #'
@@ -25,7 +26,8 @@ convertFRFiles <- function(
   outpath = paste0(tools::file_path_sans_ext(inpath), ".csv"),
   return_data = FALSE,
   values_as_numeric = TRUE,
-  clean_names = TRUE
+  clean_names = TRUE,
+  ...
 ) {
   if (!is.character(inpath) || length(inpath) != 1) {
     stop("`inpath` must be a single string to a .txt file.")
@@ -131,7 +133,7 @@ convertFRFiles <- function(
   }
 
   if (clean_names) {
-    df <- janitor::clean_names(df)
+    df <- janitor::clean_names(df, ...)
   }
   # construct CSV path (same dir, same basename, .csv extension)
   csv_path <- file.path(

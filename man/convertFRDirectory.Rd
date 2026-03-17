@@ -11,7 +11,8 @@ convertFRDirectory(
   pattern = NULL,
   values_as_numeric = TRUE,
   clean_names = TRUE,
-  save_metadata = outpath
+  save_metadata = outpath,
+  ...
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ convertFRDirectory(
 \item{clean_names}{returns janitor-style clean names}
 
 \item{save_metadata}{save the metadata as a csv in the outpath, set to NULL to not save}
+
+\item{...}{arguments passed as necessary}
 }
 \value{
 Invisibly returns the metadata.

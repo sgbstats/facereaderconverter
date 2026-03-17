@@ -9,7 +9,8 @@ convertFRFiles(
   outpath = paste0(tools::file_path_sans_ext(inpath), ".csv"),
   return_data = FALSE,
   values_as_numeric = TRUE,
-  clean_names = TRUE
+  clean_names = TRUE,
+  ...
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ convertFRFiles(
 \item{values_as_numeric}{Save values as numeric, where applicable}
 
 \item{clean_names}{returns janitor-style clean names}
+
+\item{...}{arguments passed as necessary}
 }
 \value{
 Invisibly returns the metadata.

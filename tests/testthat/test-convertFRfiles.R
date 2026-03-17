@@ -47,6 +47,13 @@ test_that("convertFRFiles", {
   x = read.csv("testdata/testdata_detailed.csv")
   expect_all_true(names(x) == names(janitor::clean_names(x)))
 
+  expect_no_error(convertFRFiles(
+    "testdata/testdata_detailed.txt",
+    case = "all_caps"
+  ))
+  x = read.csv("testdata/testdata_detailed.csv")
+  expect_all_true(names(x) == names(janitor::clean_names(x, case = "all_caps")))
+
   x = convertFRFiles("testdata/testdata_detailed.txt")
   expect_true(ncol(x) == 5)
   expect_true(grepl("csv", x$outpath))

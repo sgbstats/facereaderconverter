@@ -55,6 +55,14 @@ test_that("convertFRDirectory", {
   x = read.csv("testdata/testdata_detailed.csv")
   expect_all_true(names(x) == names(janitor::clean_names(x)))
 
+  expect_no_error(convertFRDirectory(
+    "testdata",
+    clean_names = TRUE,
+    case = "all_caps"
+  ))
+  x = read.csv("testdata/testdata_detailed.csv")
+  expect_all_true(names(x) == names(janitor::clean_names(x, case = "all_caps")))
+
   x = convertFRDirectory("testdata")
   expect_true(nrow(x) == 4)
   expect_all_true(x |> dplyr::filter(status == "Fail") |> nrow() == 1)
