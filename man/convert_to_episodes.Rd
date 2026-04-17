@@ -2,13 +2,14 @@
 % Please edit documentation in R/convert_to_episodes.R
 \name{convert_to_episodes}
 \alias{convert_to_episodes}
-\title{Detect episodes using hysteresis + delta + min-duration}
+\title{\\item{episodes}{data.table of detected episodes (start_frame, end_frame, n_frames, duration_s, id, subject, emotion, run_id).}
+\\item{coding}{annotated data.table with added columns \\code{state}, \\code{run_id}, \\code{status}, and \\code{in_state}.}a.frame with columns: id, subject, emotion, frame (or video_time), value or with id, subject and video_time with wide emotions}
 \usage{
 convert_to_episodes(
   coding_df,
   fps = 30L,
   T_up = 0.2,
-  T_down = 0.18,
+  T_down = 0.1,
   delta = 0.1,
   delta_window = 0.1,
   min_dur_sec = 0.1,
@@ -16,15 +17,13 @@ convert_to_episodes(
 )
 }
 \arguments{
-\item{coding_df}{data.frame with columns: id, subject, emotion, frame (or video_time), value or with id, subject and video_time with wide emotions}
-
 \item{fps}{integer Frames per second (sampling rate of the data). Default: 30L.}
 
-\item{T_up}{numeric Upper threshold for entering an episode. Default: 0.20.}
+\item{T_up}{numeric Upper threshold for entering an episode. Default: 0.2.}
 
-\item{T_down}{numeric Lower threshold for exiting an episode. Default: 0.18.}
+\item{T_down}{numeric Lower threshold for exiting an episode. Default: 0.1.}
 
-\item{delta}{numeric Minimum change (delta) for windowed max-min rule. Default: 0.10.}
+\item{delta}{numeric Minimum change (delta) for windowed max-min rule. Default: 0.1.}
 
 \item{delta_window}{numeric Window size (in seconds) for the delta/max-min rule. Default: 0.1.}
 
@@ -40,8 +39,8 @@ A list with two elements:
 }
 }
 \description{
-Convert frame-level coding into episode-level summaries. Ensures the returned
-episode end_frame is the last prior frame with a non-NA value.
+\\item{episodes}{data.table of detected episodes (start_frame, end_frame, n_frames, duration_s, id, subject, emotion, run_id).}
+\\item{coding}{annotated data.table with added columns \\code{state}, \\code{run_id}, \\code{status}, and \\code{in_state}.}a.frame with columns: id, subject, emotion, frame (or video_time), value or with id, subject and video_time with wide emotions
 }
 \details{
 The function uses a C++ implementation \code{hysteresis_state_cpp} if available; otherwise it will error.
@@ -49,6 +48,6 @@ It relies on \pkg{data.table} for fast grouping and joins.
 }
 \examples{
 \dontrun{
-convert_to_episodes(coding_df, fps = 30L)
+convert_to_episodes(coding_df)
 }
 }

@@ -31,6 +31,10 @@ test_that("convert_to_episodes", {
       sum(x$coding$status == 0, na.rm = TRUE)
   })
 
+  expect_true(max(x$coding$run_id, na.rm = TRUE) == nrow(x$episodes))
+  expect_true(
+    max(x$coding$run_id, na.rm = TRUE) == max(x$episodes$run_id, na.rm = TRUE)
+  )
   expect_error(
     convert_to_episodes(coding_df2, fps = 0),
     "`fps` must be a positive integer scalar."
