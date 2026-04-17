@@ -126,12 +126,12 @@ convert_to_episodes <- function(
 
   data.table::setkey(dt, id, subject, emotion, frame)
 
-  if (!exists("hysteresis_state_cpp", mode = "function")) {
+  if (!exists("hysteresis_state", mode = "function")) {
     stop("Cpp not found")
   }
 
   dt[,
-    state := hysteresis_state_cpp(
+    state := hysteresis_state(
       value,
       k,
       T_up,
