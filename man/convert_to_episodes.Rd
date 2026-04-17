@@ -17,6 +17,8 @@ convert_to_episodes(
 )
 }
 \arguments{
+\item{coding_df}{a dataframe or otherwise from a FaceReader output. id and subject should be present.}
+
 \item{fps}{integer Frames per second (sampling rate of the data). Default: 30L.}
 
 \item{T_up}{numeric Upper threshold for entering an episode. Default: 0.2.}

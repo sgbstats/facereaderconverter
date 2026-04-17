@@ -1,5 +1,6 @@
 #'   \\item{episodes}{data.table of detected episodes (start_frame, end_frame, n_frames, duration_s, id, subject, emotion, run_id).}
 #'   \\item{coding}{annotated data.table with added columns \\code{state}, \\code{run_id}, \\code{status}, and \\code{in_state}.}a.frame with columns: id, subject, emotion, frame (or video_time), value or with id, subject and video_time with wide emotions
+#' @param coding_df a dataframe or otherwise from a FaceReader output. id and subject should be present.
 #' @param fps integer Frames per second (sampling rate of the data). Default: 30L.
 #' @param T_up numeric Upper threshold for entering an episode. Default: 0.2.
 #' @param T_down numeric Lower threshold for exiting an episode. Default: 0.1.
@@ -65,15 +66,15 @@ convert_to_episodes <- function(
     stop("`consecutive_missing` must be a non-negative integer scalar.")
   }
 
-  required_cols <- c("id", "subject", "video_time")
-  missing_cols <- setdiff(required_cols, names(coding_df))
-  if (length(missing_cols) > 0L) {
+  if (!"id" %in% names(coding_df)) {
+    coding_df <- dplyr::mutate(coding_df, id = 1L)
+  }
+  if (!"subject" %in% names(coding_df)) {
+    coding_df <- dplyr::mutate(coding_df, subject = "unknown")
+  }
+  if (!"video_time" %in% names(coding_df) && !"frame" %in% names(coding_df)) {
     stop(
-      sprintf(
-        "coding_df is missing required column(s): %s. It must contain: %s",
-        paste(missing_cols, collapse = ", "),
-        paste(required_cols, collapse = ", ")
-      ),
+      "coding_df must contain either `video_time` or `frame`.",
       call. = FALSE
     )
   }
@@ -91,6 +92,20 @@ convert_to_episodes <- function(
   dt <- data.table::as.data.table(coding_df)
   k <- as.integer(round(delta_window * fps))
   min_len <- as.integer(ceiling(min_dur_sec * fps))
+
+  if ("video_time" %in% names(dt)) {
+    duplicate_video_time <- dt[,
+      .N,
+      by = .(id, subject, emotion, video_time)
+    ][N > 1L]
+
+    if (nrow(duplicate_video_time) > 0L) {
+      stop(
+        "Duplicate `video_time` values found within `id`/`subject`/`emotion` groups.",
+        call. = FALSE
+      )
+    }
+  }
 
   if (!"frame" %in% names(dt)) {
     if (!"video_time" %in% names(dt)) {
@@ -227,6 +242,8 @@ convert_to_episodes <- function(
 
   coding_cols <- unique(c(
     intersect(original_cols, names(dt)),
+    "id",
+    "subject",
     "emotion",
     "value",
     "state",

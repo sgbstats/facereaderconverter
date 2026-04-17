@@ -9,12 +9,22 @@ test_that("convert_to_episodes", {
       values_to = "value"
     )
 
-  #long data
+  # long data
   expect_no_error({
     convert_to_episodes(coding_df2)
+
+    duplicate_long_df = dplyr::bind_rows(
+      coding_df2,
+      coding_df2 |> dplyr::slice(1)
+    )
+
+    expect_error(
+      convert_to_episodes(duplicate_long_df),
+      "Duplicate `video_time` values found within `id`/`subject`/`emotion` groups."
+    )
   })
 
-  #wide data
+  # wide data
   expect_no_error({
     convert_to_episodes(coding_df)
   })
@@ -23,8 +33,8 @@ test_that("convert_to_episodes", {
 
   expect_true(all(names(x) %in% c("episodes", "coding")))
 
-  #checking that all there is 1 episode per status row
-  expect_true(sum(x$coding$status, na.rm = T) == nrow(x$episodes))
+  # checking that all there is 1 episode per status row
+  expect_true(sum(x$coding$status, na.rm = TRUE) == nrow(x$episodes))
 
   expect_true({
     sum(x$coding$status == 1, na.rm = TRUE) ==
@@ -79,9 +89,29 @@ test_that("convert_to_episodes", {
     convert_to_episodes(coding_df2, consecutive_missing = 1.5),
     "`consecutive_missing` must be a non-negative integer scalar."
   )
-
-  expect_error(
-    convert_to_episodes(coding_df2 |> dplyr::select(-id)),
-    "coding_df is missing required column\\(s\\):"
+  x = convert_to_episodes(coding_df2 |> dplyr::select(-id))
+  expect_true("id" %in% names(x$coding))
+  expect_true(
+    max(x$coding$id, na.rm = TRUE) == 1
   )
+  x = convert_to_episodes(coding_df2 |> dplyr::select(-subject))
+  expect_true("subject" %in% names(x$coding))
+  expect_true(
+    identical(
+      x$coding |> dplyr::count(subject) |> dplyr::pull(subject),
+      factor("unknown", levels = levels(x$coding$subject))
+    )
+  )
+
+  expect_no_error(convert_to_episodes(
+    rbind.data.frame(coding_df2 |> mutate(id = 1), coding_df2 |> mutate(id = 2))
+  ))
+
+  expect_error(convert_to_episodes(
+    rbind.data.frame(
+      coding_df2 |> mutate(id = 1),
+      coding_df2 |> mutate(id = 1)
+    ),
+    "Duplicate `video_time` values found within `id`/`subject`/`emotion` groups."
+  ))
 })
