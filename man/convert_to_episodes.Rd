@@ -7,19 +7,17 @@
 \usage{
 convert_to_episodes(
   coding_df,
-  fps = 30L,
   T_up = 0.2,
   T_down = 0.1,
   delta = 0.1,
   delta_window = 0.1,
   min_dur_sec = 0.1,
-  consecutive_missing = 150L
+  consecutive_missing = 150L,
+  fps = 30L
 )
 }
 \arguments{
 \item{coding_df}{a dataframe or otherwise from a FaceReader output. id and subject should be present.}
-
-\item{fps}{integer Frames per second (sampling rate of the data). Default: 30L.}
 
 \item{T_up}{numeric Upper threshold for entering an episode. Default: 0.2.}
 
@@ -32,6 +30,8 @@ convert_to_episodes(
 \item{min_dur_sec}{numeric Minimum episode duration (in seconds). Default: 0.1.}
 
 \item{consecutive_missing}{integer Maximum allowed consecutive missing (NA) frames while in-state before forcing episode end. Default: 150L.}
+
+\item{fps}{integer Frames per second (sampling rate of the data). Default: 30L.}
 }
 \value{
 A list with two elements:

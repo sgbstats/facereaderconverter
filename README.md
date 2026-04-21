@@ -125,7 +125,19 @@ duration are removed.
 using a windowed delta rule within each `id`, `subject`, and `emotion`
 group.
 
-Expected columns are:
+**Delta Rule and Direction:**
+
+- For each window, if the difference between the maximum and minimum
+  value (`window_max - window_min`) exceeds the `delta` threshold, a
+  delta event is triggered.
+- The direction is encoded as:
+  - `1` (up): if the maximum occurs after the minimum within the window
+    (i.e., an upward change)
+  - `0` (down): if the maximum occurs before the minimum within the
+    window (i.e., a downward change)
+  - `NA`: if no delta event is detected
+
+**Expected columns:**
 
 - `id`
 - `subject`
@@ -133,11 +145,13 @@ Expected columns are:
 - `frame` or `video_time`
 - `value`
 
-Key arguments:
+**Key arguments:**
 
 - `delta_window`: window size in seconds used to evaluate change
 - `delta`: threshold used for both upward and downward change detection
 - `fps`: frames per second used to convert the time window into frames
+
+**Example:**
 
 ``` r
 library(facereaderconverter)
@@ -149,3 +163,6 @@ coding_with_delta <- add_delta_column(
   fps = 30L
 )
 ```
+
+The resulting `delta` column will contain `1` for upward events, `0` for
+downward events, and `NA` otherwise.

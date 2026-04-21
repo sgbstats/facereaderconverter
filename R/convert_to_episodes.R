@@ -1,13 +1,13 @@
 #'   \\item{episodes}{data.table of detected episodes (start_frame, end_frame, n_frames, duration_s, id, subject, emotion, run_id).}
 #'   \\item{coding}{annotated data.table with added columns \\code{state}, \\code{run_id}, \\code{status}, and \\code{in_state}.}a.frame with columns: id, subject, emotion, frame (or video_time), value or with id, subject and video_time with wide emotions
 #' @param coding_df a dataframe or otherwise from a FaceReader output. id and subject should be present.
-#' @param fps integer Frames per second (sampling rate of the data). Default: 30L.
 #' @param T_up numeric Upper threshold for entering an episode. Default: 0.2.
 #' @param T_down numeric Lower threshold for exiting an episode. Default: 0.1.
 #' @param delta numeric Minimum change (delta) for windowed max-min rule. Default: 0.1.
 #' @param delta_window numeric Window size (in seconds) for the delta/max-min rule. Default: 0.1.
 #' @param min_dur_sec numeric Minimum episode duration (in seconds). Default: 0.1.
 #' @param consecutive_missing integer Maximum allowed consecutive missing (NA) frames while in-state before forcing episode end. Default: 150L.
+#' @param fps integer Frames per second (sampling rate of the data). Default: 30L.
 #' @return A list with two elements:
 #' \describe{
 #'   \item{episodes}{data.table of detected episodes (start_frame, end_frame, n_frames, duration_s, id, subject, emotion).}
@@ -24,13 +24,13 @@
 #' @export
 convert_to_episodes <- function(
   coding_df,
-  fps = 30L,
   T_up = 0.20,
   T_down = 0.1,
   delta = 0.10,
   delta_window = 0.1,
   min_dur_sec = 0.1,
-  consecutive_missing = 150L
+  consecutive_missing = 150L,
+  fps = 30L
 ) {
   original_cols <- names(coding_df)
 
