@@ -14,7 +14,7 @@
 #' @importFrom data.table tstrsplit
 # parser: use existing if available, otherwise local
 
-parse_time_to_frame <- function(video_time, fps = fps) {
+parse_time_to_frame <- function(video_time, fps) {
   parts <- data.table::tstrsplit(video_time, ":", fixed = FALSE)
   ncols <- length(parts)
   if (ncols == 3L) {
