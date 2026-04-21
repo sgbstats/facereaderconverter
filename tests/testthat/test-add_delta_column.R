@@ -110,15 +110,15 @@ test_that("add_delta_column", {
   )
 
   expect_no_error(add_delta_column(
-    rbind.data.frame(coding_df2 |> mutate(id = 1), coding_df2 |> mutate(id = 2))
+    rbind.data.frame(coding_df2 |> dplyr::mutate(id = 1), coding_df2 |> dplyr::mutate(id = 2))
   ))
 
   expect_error(
     {
       add_delta_column(
         rbind.data.frame(
-          coding_df2 |> mutate(id = 1),
-          coding_df2 |> mutate(id = 1)
+          coding_df2 |> dplyr::mutate(id = 1),
+          coding_df2 |> dplyr::mutate(id = 1)
         )
       )
     },

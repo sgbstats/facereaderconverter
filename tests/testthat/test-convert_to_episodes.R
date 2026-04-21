@@ -1,6 +1,6 @@
 test_that("convert_to_episodes", {
   coding_df = read.csv("junk/testdata_detailed.csv") |>
-    mutate(id = 1, subject = "teen")
+    dplyr::mutate(id = 1, subject = "teen")
 
   coding_df2 = coding_df |>
     tidyr::pivot_longer(
@@ -115,13 +115,13 @@ test_that("convert_to_episodes", {
   )
 
   expect_no_error(convert_to_episodes(
-    rbind.data.frame(coding_df2 |> mutate(id = 1), coding_df2 |> mutate(id = 2))
+    rbind.data.frame(coding_df2 |> dplyr::mutate(id = 1), coding_df2 |> dplyr::mutate(id = 2))
   ))
 
   expect_error(convert_to_episodes(
     rbind.data.frame(
-      coding_df2 |> mutate(id = 1),
-      coding_df2 |> mutate(id = 1)
+      coding_df2 |> dplyr::mutate(id = 1),
+      coding_df2 |> dplyr::mutate(id = 1)
     ),
     "Duplicate `video_time` values found within `id`/`subject`/`emotion` groups."
   ))
