@@ -253,9 +253,11 @@ convert_to_episodes <- function(
     "status",
     "in_state"
   ))
-
-  list(
-    episodes = episodes,
-    coding = dt[, .SD, .SDcols = coding_cols]
+  structure(
+    list(
+      episodes = episodes,
+      coding = dt[, .SD, .SDcols = coding_cols]
+    ),
+    class = c("fr_coding", "list")
   )
 }
