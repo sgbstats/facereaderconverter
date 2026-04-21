@@ -1,5 +1,5 @@
-#'   \\item{episodes}{data.table of detected episodes (start_frame, end_frame, n_frames, duration_s, id, subject, emotion, run_id).}
-#'   \\item{coding}{annotated data.table with added columns \\code{state}, \\code{run_id}, \\code{status}, and \\code{in_state}.}a.frame with columns: id, subject, emotion, frame (or video_time), value or with id, subject and video_time with wide emotions
+#' Convert coding_df to episodes
+#'
 #' @param coding_df a dataframe or otherwise from a FaceReader output. id and subject should be present.
 #' @param T_up numeric Upper threshold for entering an episode. Default: 0.2.
 #' @param T_down numeric Lower threshold for exiting an episode. Default: 0.1.
@@ -10,8 +10,8 @@
 #' @param fps integer Frames per second (sampling rate of the data). Default: 30L.
 #' @return A list with two elements:
 #' \describe{
-#'   \item{episodes}{data.table of detected episodes (start_frame, end_frame, n_frames, duration_s, id, subject, emotion).}
-#'   \item{coding}{annotated data.table (original frames with added columns \code{status} and \code{in_state}).}
+#'   \item{episodes}{data.table of detected episodes with columns \code{start_frame}, \code{end_frame}, \code{n_frames}, \code{duration_s}, \code{id}, \code{subject}, \code{emotion}, and \code{run_id}.}
+#'   \item{coding}{Annotated data.table containing the original columns plus \code{id}, \code{subject}, \code{emotion}, \code{value}, \code{run_id}, \code{status}, and \code{in_state}. \code{status} marks episode boundaries with \code{1L} at the start frame and \code{0L} at the end frame; \code{in_state} is \code{TRUE} for frames inside detected episodes.}
 #' }
 #' @details The function uses a C++ implementation \code{hysteresis_state_cpp} if available; otherwise it will error.
 #' It relies on \pkg{data.table} for fast grouping and joins.
@@ -61,6 +61,9 @@ convert_to_episodes <- function(
   }
   if (!is.numeric(min_dur_sec) || !is_scalar(min_dur_sec) || min_dur_sec <= 0) {
     stop("`min_dur_sec` must be a numeric scalar > 0.")
+  }
+  if (is.infinite(consecutive_missing)) {
+    stop("`consecutive_missing` cannot be infinite.")
   }
   if (!is_whole(consecutive_missing) || consecutive_missing < 0) {
     stop("`consecutive_missing` must be a non-negative integer scalar.")

@@ -112,13 +112,17 @@ test_that("add_delta_column", {
     rbind.data.frame(coding_df2 |> mutate(id = 1), coding_df2 |> mutate(id = 2))
   ))
 
-  expect_error(add_delta_column(
-    rbind.data.frame(
-      coding_df2 |> mutate(id = 1),
-      coding_df2 |> mutate(id = 1)
-    ),
+  expect_error(
+    {
+      add_delta_column(
+        rbind.data.frame(
+          coding_df2 |> mutate(id = 1),
+          coding_df2 |> mutate(id = 1)
+        )
+      )
+    },
     "Duplicate `video_time` values found within `id`/`subject`/`emotion` groups."
-  ))
+  )
 
   expect_true(all(c(0, 1) %in% x$delta, na.rm = TRUE))
   expect_true(sum(x$delta == 0, na.rm = TRUE) > 0)

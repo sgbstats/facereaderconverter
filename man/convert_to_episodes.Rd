@@ -2,8 +2,7 @@
 % Please edit documentation in R/convert_to_episodes.R
 \name{convert_to_episodes}
 \alias{convert_to_episodes}
-\title{\\item{episodes}{data.table of detected episodes (start_frame, end_frame, n_frames, duration_s, id, subject, emotion, run_id).}
-\\item{coding}{annotated data.table with added columns \\code{state}, \\code{run_id}, \\code{status}, and \\code{in_state}.}a.frame with columns: id, subject, emotion, frame (or video_time), value or with id, subject and video_time with wide emotions}
+\title{Convert coding_df to episodes}
 \usage{
 convert_to_episodes(
   coding_df,
@@ -36,13 +35,12 @@ convert_to_episodes(
 \value{
 A list with two elements:
 \describe{
-\item{episodes}{data.table of detected episodes (start_frame, end_frame, n_frames, duration_s, id, subject, emotion).}
-\item{coding}{annotated data.table (original frames with added columns \code{status} and \code{in_state}).}
+\item{episodes}{data.table of detected episodes with columns \code{start_frame}, \code{end_frame}, \code{n_frames}, \code{duration_s}, \code{id}, \code{subject}, \code{emotion}, and \code{run_id}.}
+\item{coding}{Annotated data.table containing the original columns plus \code{id}, \code{subject}, \code{emotion}, \code{value}, \code{run_id}, \code{status}, and \code{in_state}. \code{status} marks episode boundaries with \code{1L} at the start frame and \code{0L} at the end frame; \code{in_state} is \code{TRUE} for frames inside detected episodes.}
 }
 }
 \description{
-\\item{episodes}{data.table of detected episodes (start_frame, end_frame, n_frames, duration_s, id, subject, emotion, run_id).}
-\\item{coding}{annotated data.table with added columns \\code{state}, \\code{run_id}, \\code{status}, and \\code{in_state}.}a.frame with columns: id, subject, emotion, frame (or video_time), value or with id, subject and video_time with wide emotions
+Convert coding_df to episodes
 }
 \details{
 The function uses a C++ implementation \code{hysteresis_state_cpp} if available; otherwise it will error.

@@ -3,7 +3,7 @@ Title: Process of FaceReader outputs and emotional episodes
 Version: 0.2.0
 Authors@R: 
     person("Seb", "Bate", , "s.bate@mmu.ac.uk", role = c("aut", "cre"))
-Description: Tools to convert FaceReader outputs; Markup of emotional episodes
+Description: Tools to convert FaceReader outputs; Markup of emotional episodes.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

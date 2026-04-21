@@ -12,17 +12,28 @@ test_that("convert_to_episodes", {
   # long data
   expect_no_error({
     convert_to_episodes(coding_df2)
-
-    duplicate_long_df = dplyr::bind_rows(
-      coding_df2,
-      coding_df2 |> dplyr::slice(1)
-    )
-
-    expect_error(
-      convert_to_episodes(duplicate_long_df),
-      "Duplicate `video_time` values found within `id`/`subject`/`emotion` groups."
-    )
   })
+  expect_no_error({
+    convert_to_episodes(coding_df2, consecutive_missing = 0)
+  })
+  expect_no_error({
+    convert_to_episodes(coding_df2, consecutive_missing = 1e4)
+  })
+  expect_error(
+    {
+      convert_to_episodes(coding_df2, consecutive_missing = Inf)
+    },
+    "`consecutive_missing` cannot be infinite."
+  )
+
+  duplicate_long_df = dplyr::bind_rows(
+    coding_df2,
+    coding_df2 |> dplyr::slice(1)
+  )
+  expect_error(
+    convert_to_episodes(duplicate_long_df),
+    "Duplicate `video_time` values found within `id`/`subject`/`emotion` groups."
+  )
 
   # wide data
   expect_no_error({
