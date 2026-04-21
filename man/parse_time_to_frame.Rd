@@ -4,7 +4,7 @@
 \alias{parse_time_to_frame}
 \title{Parse video time to frame index}
 \usage{
-parse_time_to_frame(video_time, fps = fps)
+parse_time_to_frame(video_time, fps)
 }
 \arguments{
 \item{video_time}{Character or numeric. Time strings in "HH:MM:SS", "MM:SS", or numeric seconds.}
