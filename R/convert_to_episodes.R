@@ -3,8 +3,8 @@
 #' @param coding_df a dataframe or otherwise from a FaceReader output. id and subject should be present.
 #' @param T_up numeric Upper threshold for entering an episode. Default: 0.2.
 #' @param T_down numeric Lower threshold for exiting an episode. Default: 0.1.
-#' @param delta numeric Minimum change (delta) for windowed max-min rule. Default: 0.1.
-#' @param delta_window numeric Window size (in seconds) for the delta/max-min rule. Default: 0.1.
+#' @param delta numeric Minimum k-step change required, computed as the current value minus the value \code{k} frames earlier. Default: 0.1.
+#' @param delta_window numeric Time window (in seconds) used to derive \code{k}, the lag for the k-step difference rule. Default: 0.1.
 #' @param min_dur_sec numeric Minimum episode duration (in seconds). Default: 0.1.
 #' @param consecutive_missing integer Maximum allowed consecutive missing (NA) frames while in-state before forcing episode end. Default: 150L.
 #' @param fps integer Frames per second (sampling rate of the data). Default: 30L.
