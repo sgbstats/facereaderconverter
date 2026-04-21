@@ -81,7 +81,7 @@ convert_to_episodes <- function(
 
   if (!all(c("emotion", "value") %in% names(coding_df))) {
     coding_df <- coding_df |>
-      pivot_longer(
+      tidyr::pivot_longer(
         cols = -c("id", "subject", "video_time"),
         names_to = "emotion",
         values_to = "value"
@@ -246,7 +246,6 @@ convert_to_episodes <- function(
     "subject",
     "emotion",
     "value",
-    "state",
     "run_id",
     "status",
     "in_state"
