@@ -5,8 +5,8 @@
 #' @param delta_window Window size in seconds
 #' @param fps Frames per second
 #' @return coding_df with extra column 'delta' where 1 means up and 0 means down
+#' @export
 #'
-
 add_delta_column <- function(
   coding_df,
   delta = 0.1,
