@@ -22,9 +22,9 @@ convert_to_episodes(
 
 \item{T_down}{numeric Lower threshold for exiting an episode. Default: 0.1.}
 
-\item{delta}{numeric Minimum change (delta) for windowed max-min rule. Default: 0.1.}
+\item{delta}{numeric Minimum k-step change required, computed as the current value minus the value \code{k} frames earlier. Default: 0.1.}
 
-\item{delta_window}{numeric Window size (in seconds) for the delta/max-min rule. Default: 0.1.}
+\item{delta_window}{numeric Time window (in seconds) used to derive \code{k}, the lag for the k-step difference rule. Default: 0.1.}
 
 \item{min_dur_sec}{numeric Minimum episode duration (in seconds). Default: 0.1.}
 
@@ -43,7 +43,7 @@ A list with two elements:
 Convert coding_df to episodes
 }
 \details{
-The function uses a C++ implementation \code{hysteresis_state_cpp} if available; otherwise it will error.
+The function uses the exported native binding \code{hysteresis_state} if available; otherwise it will error.
 It relies on \pkg{data.table} for fast grouping and joins.
 }
 \examples{

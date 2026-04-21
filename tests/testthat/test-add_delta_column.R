@@ -1,7 +1,8 @@
 test_that("add_delta_column", {
   # Test with different delta_window and delta values
   coding_df = read.csv("junk/testdata_detailed.csv") |>
-    mutate(id = 1, subject = "teen")
+    dplyr::mutate(id = 1, subject = "teen")
+
   coding_df2 = coding_df |>
     tidyr::pivot_longer(
       cols = c(neutral, happy, sad, angry, surprised, scared, disgusted),
@@ -121,7 +122,7 @@ test_that("add_delta_column", {
         )
       )
     },
-    "Duplicate `video_time` values found within `id`/`subject`/`emotion` groups."
+    "Each `frame` must be unique within each `id`/`subject`/`emotion` group."
   )
 
   expect_true(all(c(0, 1) %in% x$delta, na.rm = TRUE))

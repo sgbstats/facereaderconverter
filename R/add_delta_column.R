@@ -39,7 +39,7 @@ add_delta_column <- function(
   if (!all(c("emotion", "value") %in% names(coding_df))) {
     coding_df <- coding_df |>
       pivot_longer(
-        cols = -c("id", "subject", "video_time"),
+        cols = -tidyselect::any_of(c("id", "subject", "video_time", "frame")),
         names_to = "emotion",
         values_to = "value"
       )
@@ -53,21 +53,18 @@ add_delta_column <- function(
     dt[, frame := parse_time_to_frame(video_time, fps = fps)]
   }
 
-  has_duplicate_frame <- dt[
-    ,
+  has_duplicate_frame <- dt[,
     any(duplicated(frame)),
     by = .(id, subject, emotion)
   ][["V1"]]
   if (any(has_duplicate_frame)) {
     stop(
-      "Each `frame` must be unique within each `id`/`subject`/`emotion` group. ",
-      "Duplicate frames can make delta direction ambiguous."
+      "Each `frame` must be unique within each `id`/`subject`/`emotion` group."
     )
   }
 
   if ("video_time" %in% names(dt)) {
-    has_duplicate_video_time <- dt[
-      ,
+    has_duplicate_video_time <- dt[,
       any(duplicated(video_time)),
       by = .(id, subject, emotion)
     ][["V1"]]
