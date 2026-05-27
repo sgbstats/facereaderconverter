@@ -51,7 +51,7 @@ convertFRFiles <- function(
   )
 
   if (!grepl("video analysis", md[1], ignore.case = TRUE)) {
-    stop("Not a FR file.")
+    stop("FaceReader metadata missing.")
   }
 
   md_videoname <- gsub("Filename", "", md[6]) |> stringr::str_trim()
