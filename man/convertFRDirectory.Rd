@@ -48,7 +48,7 @@ Reads all Txt files in a folder and sends them through convertFRFiles.
 \dontrun{
 convertFRDirectory(
   inpath="directory_of_txt_files",
-  outpath="directory_to_save_csvs_to"
+  outpath="directory_to_save_csvs_to",
   values_as_numeric = TRUE
 )
 }
