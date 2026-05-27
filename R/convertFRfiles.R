@@ -137,21 +137,22 @@ convertFRFiles <- function(
     warning("Duplicate timecodes")
   }
 
+  if (md_type == "detailed" && fail_codes) {
+    df <- df |>
+      dplyr::mutate(
+        fail_code = dplyr::case_when(
+          Neutral == "FIT_FAILED" ~ 1,
+          Neutral == "FIND_FAILED" ~ 2,
+          .default = 0
+        )
+      )
+  }
+
   if (values_as_numeric) {
     df <- df |>
       dplyr::mutate(`Video Time` = as_hms(`Video Time`))
 
     if (md_type == "detailed") {
-      if (fail_codes) {
-        df = df |>
-          mutate(
-            fail_code = case_when(
-              Neutral == "FIT_FAILED" ~ 1,
-              Neutral == "FIND_FAILED" ~ 2,
-              .default = 0
-            )
-          )
-      }
       df <- df |>
         dplyr::mutate(across(
           -any_of(c("Video Time")),
