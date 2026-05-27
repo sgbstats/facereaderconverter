@@ -121,9 +121,9 @@ convertFRFiles <- function(
   )
   timecount = df |> count(`Video Time`) |> pull(n) |> max()
   if (timecount > 1 && duplicate_timecodes_as_error) {
-    stop("Dupliacate timecodes")
+    stop("Dupliacte timecodes")
   } else if (timecount > 1) {
-    warning("Dupliacate timecodes")
+    warning("Duplicate timecodes")
   }
 
   if (values_as_numeric) {

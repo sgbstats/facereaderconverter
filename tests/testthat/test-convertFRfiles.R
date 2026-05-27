@@ -95,7 +95,7 @@ test_that("convertFRFiles", {
 
   expect_error(
     convertFRFiles("testdata/testdata_detailed_duplicate_timecode.txt"),
-    "Dupliacate timecodes"
+    "Duplicate timecodes"
   )
 
   expect_error(
@@ -103,7 +103,7 @@ test_that("convertFRFiles", {
       "testdata/testdata_detailed_duplicate_timecode.txt",
       duplicate_timecodes_as_error = TRUE
     ),
-    "Dupliacate timecodes"
+    "Duplicate timecodes"
   )
 
   expect_warning(
@@ -111,6 +111,6 @@ test_that("convertFRFiles", {
       "testdata/testdata_detailed_duplicate_timecode.txt",
       duplicate_timecodes_as_error = FALSE
     ),
-    "Dupliacate timecodes"
+    "Duplicate timecodes"
   )
 })
