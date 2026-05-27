@@ -64,9 +64,16 @@ test_that("convertFRDirectory", {
   expect_all_true(names(x) == names(janitor::clean_names(x, case = "all_caps")))
 
   x = convertFRDirectory("testdata")
-  expect_true(nrow(x) == 4)
-  expect_all_true(x |> dplyr::filter(status == "Fail") |> nrow() == 1)
+  expect_true(nrow(x) == 5)
+  expect_all_true(x |> dplyr::filter(status == "Fail") |> nrow() == 2)
 
   x = convertFRDirectory("testdata", pattern = "state")
   expect_true(nrow(x) == 2)
+
+  x = convertFRDirectory("testdata", duplicate_timecodes_as_error = FALSE)
+
+  expect_all_true(x |> dplyr::filter(status == "Fail") |> nrow() == 1)
+  expect_all_true(
+    x |> dplyr::filter(status == "Success", !is.na(error)) |> nrow() == 1
+  )
 })

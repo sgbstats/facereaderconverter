@@ -10,6 +10,7 @@ convertFRFiles(
   return_data = FALSE,
   values_as_numeric = TRUE,
   clean_names = TRUE,
+  fail_codes = FALSE,
   duplicate_timecodes_as_error = TRUE,
   ...
 )
@@ -25,6 +26,10 @@ convertFRFiles(
 
 \item{clean_names}{returns janitor-style clean names}
 
+\item{fail_codes}{adds a column with the fail reason, True or False. Column then has 0 for success, 1 for fit_failed, 2 for find_failed}
+
+\item{duplicate_timecodes_as_error}{throws an error if there are duplicate timecodes, if FALSE then throws warning}
+
 \item{...}{arguments passed as necessary}
 }
 \value{
@@ -34,4 +39,13 @@ Invisibly returns the metadata.
 Reads a .txt file skipping the first 10 lines, guesses the delimiter from
 the first remaining line, writes a .csv with the same basename in the same
 directory, and returns the path to the created CSV (invisibly).
+}
+\examples{
+\dontrun{
+convertFRFiles(
+  inpath="FaceReaderOutput.txt",
+  values_as_numeric = TRUE
+)
+}
+
 }

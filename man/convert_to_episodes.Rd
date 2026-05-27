@@ -48,6 +48,7 @@ It relies on \pkg{data.table} for fast grouping and joins.
 }
 \examples{
 \dontrun{
+coding_df = read.csv("testdata_detailed.csv")
 convert_to_episodes(coding_df)
 }
 }

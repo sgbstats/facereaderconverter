@@ -113,4 +113,14 @@ test_that("convertFRFiles", {
     ),
     "Duplicate timecodes"
   )
+  x = convertFRFiles(
+    "testdata/testdata_detailed.txt",
+    fail_codes = TRUE
+  )
+  y = read.csv("testdata/testdata_detailed.csv")
+  expect_true(ncol(y) == 9)
+  expect_equal(
+    y |> count(fail_code) |> pull(fail_code),
+    c(0, 1, 2)
+  )
 })
