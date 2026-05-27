@@ -10,6 +10,7 @@ convertFRFiles(
   return_data = FALSE,
   values_as_numeric = TRUE,
   clean_names = TRUE,
+  duplicate_timecodes_as_error = TRUE,
   ...
 )
 }

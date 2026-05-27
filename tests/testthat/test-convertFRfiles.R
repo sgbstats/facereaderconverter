@@ -85,11 +85,32 @@ test_that("convertFRFiles", {
   )
   expect_error(
     convertFRFiles("testdata/testdata_detailed_fail.txt"),
-    "Not a FR file."
+    "FaceReader metadata missing"
   )
 
   expect_error(
     convertFRFiles("testdata/testdata_detailed.csv"),
     "Input file must have a .txt extension."
+  )
+
+  expect_error(
+    convertFRFiles("testdata/testdata_detailed_duplicate_timecode.txt"),
+    "Dupliacate timecodes"
+  )
+
+  expect_error(
+    convertFRFiles(
+      "testdata/testdata_detailed_duplicate_timecode.txt",
+      duplicate_timecodes_as_error = TRUE
+    ),
+    "Dupliacate timecodes"
+  )
+
+  expect_warning(
+    convertFRFiles(
+      "testdata/testdata_detailed_duplicate_timecode.txt",
+      duplicate_timecodes_as_error = FALSE
+    ),
+    "Dupliacate timecodes"
   )
 })

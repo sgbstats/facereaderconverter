@@ -15,7 +15,7 @@
 #'
 #' @importFrom readr read_lines read_delim read_table cols col_character col_guess
 #' @importFrom tools file_ext file_path_sans_ext
-#' @importFrom dplyr case_when mutate
+#' @importFrom dplyr case_when mutate count pull
 #' @importFrom stringr str_trim
 #' @importFrom janitor clean_names
 #' @importFrom hms as_hms
@@ -27,6 +27,7 @@ convertFRFiles <- function(
   return_data = FALSE,
   values_as_numeric = TRUE,
   clean_names = TRUE,
+  duplicate_timecodes_as_error = TRUE,
   ...
 ) {
   if (!is.character(inpath) || length(inpath) != 1) {
@@ -51,7 +52,7 @@ convertFRFiles <- function(
   )
 
   if (!grepl("video analysis", md[1], ignore.case = TRUE)) {
-    stop("FaceReader metadata missing.")
+    stop("FaceReader metadata missing")
   }
 
   md_videoname <- gsub("Filename", "", md[6]) |> stringr::str_trim()
@@ -118,6 +119,12 @@ convertFRFiles <- function(
       show_col_types = FALSE
     )
   )
+  timecount = df |> count(`Video Time`) |> pull(n) |> max()
+  if (timecount > 1 && duplicate_timecodes_as_error) {
+    stop("Dupliacate timecodes")
+  } else if (timecount > 1) {
+    warning("Dupliacate timecodes")
+  }
 
   if (values_as_numeric) {
     df <- df |>
