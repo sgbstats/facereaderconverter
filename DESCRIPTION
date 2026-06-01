@@ -1,13 +1,12 @@
 Package: facereaderconverter
 Title: Process of FaceReader outputs and emotional episodes
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: 
     person("Seb", "Bate", , "s.bate@mmu.ac.uk", role = c("aut", "cre"))
 Description: Tools to convert FaceReader outputs; Markup of emotional episodes.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Depends: R (>= 4.1.0)
 Imports: dplyr,
     hms,
@@ -24,3 +23,4 @@ LinkingTo: Rcpp
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0

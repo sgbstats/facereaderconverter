@@ -5,6 +5,17 @@
 #' @param delta_window Window size in seconds
 #' @param fps Frames per second
 #' @return coding_df with extra column 'delta' where 1 means up and 0 means down
+#' @examples
+#' \dontrun{
+#' coding_df = read.csv("testdata_detailed.csv")
+#' add_delta_column(
+#'     coding_df,
+#'     delta_window = 0.1,
+#'     delta = 0.1,
+#'     fps = 30
+#'  )
+#' }
+#'
 #' @export
 #'
 add_delta_column <- function(
