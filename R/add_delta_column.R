@@ -1,6 +1,6 @@
 #' Add delta column to coding_df
 #'
-#' @param coding_df Data frame with columns: id, subject, emotion, frame (or video_time), value
+#' @param coding Data frame with columns: id, subject, emotion, frame (or video_time), value, or an `fr_coding` object
 #' @param delta Threshold for both up and down
 #' @param delta_window Window size in seconds
 #' @param fps Frames per second

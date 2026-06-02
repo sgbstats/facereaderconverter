@@ -4,6 +4,7 @@
 #'
 #' @param coding A datatable, dataframe or fr_coding object as returned by `convert_to_episodes`, containing columns: `id`, `subject`, `emotion`, `video_time`, `value`, and `run_id`.
 #' @param fps Frames per second (sampling rate of the data). Default: 30L or inherited from an fr_coding object
+#' @param consecutive_missing Maximum allowed consecutive missing (NA) frames while in-state before forcing episode end. Default: 150L or inherited from an fr_coding object
 #' @return A list with three elements:
 #'   \describe{
 #'     \item{episodes}{data.table of contiguous episodes after LOCF, with columns \code{start_frame}, \code{end_frame}, \code{n_frames}, \code{duration_s}, \code{id}, \code{subject}, \code{emotion}, and \code{run_id}.}

@@ -7,13 +7,13 @@
 add_delta_column(coding, delta = 0.1, delta_window = 0.2, fps = 30L)
 }
 \arguments{
+\item{coding}{Data frame with columns: id, subject, emotion, frame (or video_time), value, or an \code{fr_coding} object}
+
 \item{delta}{Threshold for both up and down}
 
 \item{delta_window}{Window size in seconds}
 
 \item{fps}{Frames per second}
-
-\item{coding_df}{Data frame with columns: id, subject, emotion, frame (or video_time), value}
 }
 \value{
 coding_df with extra column 'delta' where 1 means up and 0 means down

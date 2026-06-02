@@ -10,6 +10,8 @@ locf(coding, fps = 30, consecutive_missing = NULL)
 \item{coding}{A datatable, dataframe or fr_coding object as returned by \code{convert_to_episodes}, containing columns: \code{id}, \code{subject}, \code{emotion}, \code{video_time}, \code{value}, and \code{run_id}.}
 
 \item{fps}{Frames per second (sampling rate of the data). Default: 30L or inherited from an fr_coding object}
+
+\item{consecutive_missing}{Maximum allowed consecutive missing (NA) frames while in-state before forcing episode end. Default: 150L or inherited from an fr_coding object}
 }
 \value{
 A list with three elements:
