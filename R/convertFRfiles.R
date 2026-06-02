@@ -9,13 +9,23 @@
 #' @param return_data Bool to return the data from the txt rather than the metadata
 #' @param values_as_numeric Save values as numeric, where applicable
 #' @param clean_names returns janitor-style clean names
+#' @param fail_codes adds a column with the fail reason, True or False. Column then has 0 for success, 1 for fit_failed, 2 for find_failed
+#' @param duplicate_timecodes_as_error throws an error if there are duplicate timecodes, if FALSE then throws warning
 #' @param ... arguments passed as necessary
 #' @return Invisibly returns the metadata.
+#' @examples
+#' \dontrun{
+#' convertFRFiles(
+#'   inpath="FaceReaderOutput.txt",
+#'   values_as_numeric = TRUE
+#' )
+#' }
+#'
 #' @export
 #'
 #' @importFrom readr read_lines read_delim read_table cols col_character col_guess
 #' @importFrom tools file_ext file_path_sans_ext
-#' @importFrom dplyr case_when mutate
+#' @importFrom dplyr case_when mutate count pull
 #' @importFrom stringr str_trim
 #' @importFrom janitor clean_names
 #' @importFrom hms as_hms
@@ -27,6 +37,8 @@ convertFRFiles <- function(
   return_data = FALSE,
   values_as_numeric = TRUE,
   clean_names = TRUE,
+  fail_codes = FALSE,
+  duplicate_timecodes_as_error = TRUE,
   ...
 ) {
   if (!is.character(inpath) || length(inpath) != 1) {
@@ -51,7 +63,7 @@ convertFRFiles <- function(
   )
 
   if (!grepl("video analysis", md[1], ignore.case = TRUE)) {
-    stop("Not a FR file.")
+    stop("FaceReader metadata missing")
   }
 
   md_videoname <- gsub("Filename", "", md[6]) |> stringr::str_trim()
@@ -118,6 +130,24 @@ convertFRFiles <- function(
       show_col_types = FALSE
     )
   )
+  n_vals <- df |> count(`Video Time`) |> pull(n)
+  timecount <- if (length(n_vals) == 0) 0L else max(n_vals)
+  if (timecount > 1 && duplicate_timecodes_as_error) {
+    stop("Duplicate timecodes")
+  } else if (timecount > 1) {
+    warning("Duplicate timecodes")
+  }
+
+  if (md_type == "detailed" && fail_codes) {
+    df <- df |>
+      dplyr::mutate(
+        fail_code = dplyr::case_when(
+          Neutral == "FIT_FAILED" ~ 1,
+          Neutral == "FIND_FAILED" ~ 2,
+          .default = 0
+        )
+      )
+  }
 
   if (values_as_numeric) {
     df <- df |>
