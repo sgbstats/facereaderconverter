@@ -9,4 +9,8 @@ test_that("locf", {
   expect_no_error({
     locf(x$coding)
   })
+
+  y = locf(x)
+
+  expect_all_true(names(y$coding) == names(x$coding))
 })

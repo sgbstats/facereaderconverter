@@ -44,6 +44,8 @@ locf <- function(coding) {
     ),
     by = .(id, subject, emotion, run_grp)
   ][, run_grp := NULL][]
+
+  dt[, run_grp := NULL]
   structure(
     list(
       episodes = episodes,
