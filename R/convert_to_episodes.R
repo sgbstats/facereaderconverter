@@ -12,6 +12,7 @@
 #' \describe{
 #'   \item{episodes}{data.table of detected episodes with columns \code{start_frame}, \code{end_frame}, \code{n_frames}, \code{duration_s}, \code{id}, \code{subject}, \code{emotion}, and \code{run_id}.}
 #'   \item{coding}{Annotated data.table containing the original columns plus \code{id}, \code{subject}, \code{emotion}, \code{value}, \code{run_id}, \code{status}, and \code{in_state}. \code{status} marks episode boundaries with \code{1L} at the start frame and \code{0L} at the end frame; \code{in_state} is \code{TRUE} for frames inside detected episodes.}
+#'   \item{fps}{Frames per second (sampling rate of the data).}
 #' }
 #' @details The function uses the exported native binding \code{hysteresis_state} if available; otherwise it will error.
 #' It relies on \pkg{data.table} for fast grouping and joins.
@@ -28,7 +29,7 @@ convert_to_episodes <- function(
   T_up = 0.20,
   T_down = 0.1,
   delta = 0.10,
-  delta_window = 0.1,
+  delta_window = 0.2,
   min_dur_sec = 0.1,
   consecutive_missing = 150L,
   fps = 30L
@@ -58,6 +59,11 @@ convert_to_episodes <- function(
     stop("`T_up` must be >= `T_down`.")
   }
   if (!is.numeric(delta) || !is_scalar(delta) || delta <= 0) {
+    stop("`delta` must be a numeric scalar > 0.")
+  }
+  if (
+    !is.numeric(delta_window) || !is_scalar(delta_window) || delta_window <= 0
+  ) {
     stop("`delta` must be a numeric scalar > 0.")
   }
   if (!is.numeric(min_dur_sec) || !is_scalar(min_dur_sec) || min_dur_sec <= 0) {
@@ -254,9 +260,20 @@ convert_to_episodes <- function(
     "status",
     "in_state"
   ))
-
-  list(
-    episodes = episodes,
-    coding = dt[, .SD, .SDcols = coding_cols]
+  structure(
+    list(
+      episodes = episodes,
+      coding = dt[, .SD, .SDcols = coding_cols],
+      metadata = list(
+        fps = fps,
+        consecutive_missing = consecutive_missing,
+        delta = delta,
+        delta_window = delta_window,
+        min_dur_sec = min_dur_sec,
+        T_down = T_down,
+        T_up = T_up
+      )
+    ),
+    class = c("fr_coding", "list")
   )
 }

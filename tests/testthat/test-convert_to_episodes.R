@@ -13,6 +13,18 @@ test_that("convert_to_episodes", {
   expect_no_error({
     convert_to_episodes(coding_df2)
   })
+
+  expect_equal(
+    {
+      class(convert_to_episodes(coding_df2))
+    },
+    c("fr_coding", "list")
+  )
+
+  expect_no_error({
+    convert_to_episodes(coding_df2, fps = 30)
+  })
+
   expect_no_error({
     convert_to_episodes(coding_df2, consecutive_missing = 0)
   })
@@ -42,7 +54,7 @@ test_that("convert_to_episodes", {
 
   x = convert_to_episodes(coding_df)
 
-  expect_true(all(names(x) %in% c("episodes", "coding")))
+  expect_true(all(names(x) %in% c("episodes", "coding", "metadata")))
 
   # checking that all there is 1 episode per status row
   expect_true(sum(x$coding$status, na.rm = TRUE) == nrow(x$episodes))
@@ -101,6 +113,7 @@ test_that("convert_to_episodes", {
     "`consecutive_missing` must be a non-negative integer scalar."
   )
   x = convert_to_episodes(coding_df2 |> dplyr::select(-id))
+
   expect_true("id" %in% names(x$coding))
   expect_true(
     max(x$coding$id, na.rm = TRUE) == 1
@@ -115,7 +128,10 @@ test_that("convert_to_episodes", {
   )
 
   expect_no_error(convert_to_episodes(
-    rbind.data.frame(coding_df2 |> dplyr::mutate(id = 1), coding_df2 |> dplyr::mutate(id = 2))
+    rbind.data.frame(
+      coding_df2 |> dplyr::mutate(id = 1),
+      coding_df2 |> dplyr::mutate(id = 2)
+    )
   ))
 
   expect_error(convert_to_episodes(
