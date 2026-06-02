@@ -23,13 +23,13 @@ test_that("locf", {
     c(y$metadata$fps, y$metadata$consecutive_missing),
     c(30, 2)
   )
-  expect_less_than(
+  expect_lte(
     y[["coding"]] |>
       as.data.frame() |>
-      dplyr::filter(!is.na(run_id), is.na(value)) |>
+      dplyr::filter(!is.na(run_id), is.na(value), !in_state) |>
       count(run_id) |>
       pull(n) |>
       max(),
-    3
+    2
   )
 })

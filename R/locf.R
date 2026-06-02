@@ -40,6 +40,26 @@ locf <- function(coding, fps = 30, consecutive_missing = NULL) {
 
   dt_sensitivity[, value_block := NULL]
 
+  if (!is.null(consecutive_missing)) {
+    dt_sensitivity[, row_id := seq_len(.N), by = .(id, subject, emotion)]
+    dt_sensitivity[
+      !is.na(run_id),
+      last_true_row := {
+        if (any(in_state)) max(row_id[in_state]) else NA_integer_
+      },
+      by = .(id, subject, emotion, run_id)
+    ]
+    dt_sensitivity[
+      !is.na(run_id) &
+        is.na(value) &
+        !in_state &
+        !is.na(last_true_row) &
+        row_id > last_true_row + consecutive_missing,
+      run_id := NA_integer_
+    ]
+    dt_sensitivity[, c("row_id", "last_true_row") := NULL]
+  }
+
   episodes <- dt_sensitivity[
     !is.na(run_id),
     .(
