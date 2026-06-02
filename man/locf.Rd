@@ -4,16 +4,19 @@
 \alias{locf}
 \title{Apply LOCF and Extract Episodes}
 \usage{
-locf(coding)
+locf(coding, fps = 30, consecutive_missing = NULL)
 }
 \arguments{
-\item{coding}{A data.table or data.frame as returned by \code{convert_to_episodes}, containing columns: \code{id}, \code{subject}, \code{emotion}, \code{video_time}, \code{value}, and \code{run_id}.}
+\item{coding}{A datatable, dataframe or fr_coding object as returned by \code{convert_to_episodes}, containing columns: \code{id}, \code{subject}, \code{emotion}, \code{video_time}, \code{value}, and \code{run_id}.}
+
+\item{fps}{Frames per second (sampling rate of the data). Default: 30L or inherited from an fr_coding object}
 }
 \value{
-A list with two elements:
+A list with three elements:
 \describe{
 \item{episodes}{data.table of contiguous episodes after LOCF, with columns \code{start_frame}, \code{end_frame}, \code{n_frames}, \code{duration_s}, \code{id}, \code{subject}, \code{emotion}, and \code{run_id}.}
 \item{coding}{Annotated data.table with LOCF-imputed \code{run_id}.}
+\item{metadata}{Metadata from fr_coding object.}
 }
 }
 \description{

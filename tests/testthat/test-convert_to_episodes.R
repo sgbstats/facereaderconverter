@@ -54,7 +54,7 @@ test_that("convert_to_episodes", {
 
   x = convert_to_episodes(coding_df)
 
-  expect_true(all(names(x) %in% c("episodes", "coding")))
+  expect_true(all(names(x) %in% c("episodes", "coding", "metadata")))
 
   # checking that all there is 1 episode per status row
   expect_true(sum(x$coding$status, na.rm = TRUE) == nrow(x$episodes))

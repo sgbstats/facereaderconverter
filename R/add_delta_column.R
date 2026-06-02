@@ -10,7 +10,7 @@
 #' coding_df = read.csv("testdata_detailed.csv")
 #' add_delta_column(
 #'     coding_df,
-#'     delta_window = 0.1,
+#'     delta_window = 0.2,
 #'     delta = 0.1,
 #'     fps = 30
 #'  )
@@ -19,16 +19,22 @@
 #' @export
 #'
 add_delta_column <- function(
-  coding_df,
+  coding,
   delta = 0.1,
-  delta_window = 0.1,
+  delta_window = 0.2,
   fps = 30L
 ) {
   is_scalar <- function(x) length(x) == 1 && !is.na(x)
   is_whole <- function(x) {
     is.numeric(x) && is_scalar(x) && abs(x - round(x)) < .Machine$double.eps^0.5
   }
-
+  stopifnot(requireNamespace("data.table"))
+  if ("fr_coding" %in% class(coding)) {
+    coding_df = coding$coding
+    fps = coding$metadata$fps
+  } else {
+    coding_df = coding
+  }
   if (!is_whole(fps) || fps <= 0) {
     stop("`fps` must be a positive integer scalar.")
   }
