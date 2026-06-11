@@ -25,6 +25,13 @@ test_that("convertFRDirectory", {
 
   expect_no_error(convertFRDirectory("testdata"))
   expect_true(file.exists("testdata/metadata.csv"))
+
+  expect_no_error(convertFRDirectory(
+    "testdata",
+    metadata_filename = "metadata2.csv"
+  ))
+  expect_true(file.exists("testdata/metadata2.csv"))
+
   x = read.csv("testdata/metadata.csv")
   expect_all_true(grepl("csv", x$outpath[x$status == "Success"]))
 

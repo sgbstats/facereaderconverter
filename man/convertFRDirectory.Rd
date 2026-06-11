@@ -12,6 +12,7 @@ convertFRDirectory(
   values_as_numeric = TRUE,
   clean_names = TRUE,
   save_metadata = outpath,
+  metadata_filename = "metadata.csv",
   fail_codes = FALSE,
   duplicate_timecodes_as_error = TRUE,
   ...
@@ -31,6 +32,8 @@ convertFRDirectory(
 \item{clean_names}{returns janitor-style clean names}
 
 \item{save_metadata}{save the metadata as a csv in the outpath, set to NULL to not save}
+
+\item{metadata_filename}{filename of the metadata csv}
 
 \item{fail_codes}{adds a column with the fail reason, True or False. Column then has 0 for success, 1 for fit_failed, 2 for find_failed}
 

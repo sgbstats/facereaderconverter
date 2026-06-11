@@ -11,6 +11,7 @@
 #' @param fail_codes adds a column with the fail reason, True or False. Column then has 0 for success, 1 for fit_failed, 2 for find_failed
 #' @param duplicate_timecodes_as_error throws an error if there are duplicate timecodes, if FALSE then throws warning
 #' @param save_metadata save the metadata as a csv in the outpath, set to NULL to not save
+#' @param metadata_filename filename of the metadata csv
 #' @param ... arguments passed as necessary
 #' @return Invisibly returns the metadata.
 #' @examples
@@ -35,6 +36,7 @@ convertFRDirectory <- function(
   values_as_numeric = TRUE,
   clean_names = TRUE,
   save_metadata = outpath,
+  metadata_filename = "metadata.csv",
   fail_codes = FALSE,
   duplicate_timecodes_as_error = TRUE,
   ...
@@ -128,7 +130,7 @@ convertFRDirectory <- function(
     )
   }
   if (!is.null(save_metadata)) {
-    write.csv(metadata, paste0(save_metadata, "/metadata.csv"))
+    write.csv(metadata, paste0(save_metadata, "/", metadata_filename))
   }
   invisible(metadata)
 }
