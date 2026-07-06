@@ -1,6 +1,6 @@
 test_that("convert_to_episodes", {
-  coding_df = read.csv("junk/testdata_detailed.csv") |>
-    dplyr::mutate(id = 1, subject = "teen")
+  coding_df = read.csv("testdata/testdata_detailed.csv") |>
+    dplyr::mutate(id = 1, subject = "parent")
 
   coding_df2 = coding_df |>
     tidyr::pivot_longer(
@@ -64,7 +64,9 @@ test_that("convert_to_episodes", {
       sum(x$coding$status == 0, na.rm = TRUE)
   })
 
-  expect_true(max(x$coding$run_id, na.rm = TRUE) == nrow(x$episodes))
+  expect_all_true(
+    sort(unique(x$coding$run_id)) == sort(unique(x$episodes$run_id))
+  )
   expect_true(
     max(x$coding$run_id, na.rm = TRUE) == max(x$episodes$run_id, na.rm = TRUE)
   )

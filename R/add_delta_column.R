@@ -4,6 +4,7 @@
 #' @param delta Threshold for both up and down
 #' @param delta_window Window size in seconds
 #' @param fps Frames per second
+#' @param cores integer Number of threads to use. Default 0 is auto.
 #' @return coding_df with extra column 'delta' where 1 means up and 0 means down
 #' @examples
 #' \dontrun{
@@ -22,8 +23,14 @@ add_delta_column <- function(
   coding,
   delta = 0.1,
   delta_window = 0.2,
-  fps = 30L
+  fps = 30L,
+  cores = 0L
 ) {
+  # --- Multithreading ---
+  old_threads <- data.table::getDTthreads()
+  on.exit(data.table::setDTthreads(old_threads), add = TRUE)
+  data.table::setDTthreads(threads = cores)
+
   is_scalar <- function(x) length(x) == 1 && !is.na(x)
   is_whole <- function(x) {
     is.numeric(x) && is_scalar(x) && abs(x - round(x)) < .Machine$double.eps^0.5
