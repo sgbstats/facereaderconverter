@@ -8,6 +8,7 @@
 #' @param min_dur_sec numeric Minimum episode duration (in seconds). Default: 0.1.
 #' @param consecutive_missing integer Maximum allowed consecutive missing (NA) frames while in-state before forcing episode end. Default: 150L.
 #' @param fps integer Frames per second (sampling rate of the data). Default: 30L.
+#' @param cores integer Number of threads to use. Default 0 is auto.
 #' @return A list with two elements:
 #' \describe{
 #'   \item{episodes}{data.table of detected episodes with columns \code{start_frame}, \code{end_frame}, \code{n_frames}, \code{duration_s}, \code{id}, \code{subject}, \code{emotion}, and \code{run_id}.}
@@ -32,8 +33,14 @@ convert_to_episodes <- function(
   delta_window = 0.2,
   min_dur_sec = 0.1,
   consecutive_missing = 150L,
-  fps = 30L
+  fps = 30L,
+  cores = 0L
 ) {
+  # --- Multithreading ---
+  old_threads <- data.table::getDTthreads()
+  on.exit(data.table::setDTthreads(old_threads), add = TRUE)
+  data.table::setDTthreads(threads = cores)
+
   original_cols <- names(coding_df)
 
   is_scalar <- function(x) length(x) == 1 && !is.na(x)
