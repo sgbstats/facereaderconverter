@@ -12,7 +12,8 @@ convert_to_episodes(
   delta_window = 0.2,
   min_dur_sec = 0.1,
   consecutive_missing = 150L,
-  fps = 30L
+  fps = 30L,
+  cores = 0L
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ convert_to_episodes(
 \item{consecutive_missing}{integer Maximum allowed consecutive missing (NA) frames while in-state before forcing episode end. Default: 150L.}
 
 \item{fps}{integer Frames per second (sampling rate of the data). Default: 30L.}
+
+\item{cores}{integer Number of threads to use. Default 0 is auto.}
 }
 \value{
 A list with two elements:
