@@ -1,8 +1,8 @@
 test_that("convert_to_episodes", {
-  coding_df = read.csv("testdata/testdata_detailed.csv") |>
+  coding_df <- read.csv("testdata/testdata_detailed.csv") |>
     dplyr::mutate(id = 1, subject = "parent")
 
-  coding_df2 = coding_df |>
+  coding_df2 <- coding_df |>
     tidyr::pivot_longer(
       cols = c(neutral, happy, sad, angry, surprised, scared, disgusted),
       names_to = "emotion",
@@ -38,7 +38,7 @@ test_that("convert_to_episodes", {
     "`consecutive_missing` cannot be infinite."
   )
 
-  duplicate_long_df = dplyr::bind_rows(
+  duplicate_long_df <- dplyr::bind_rows(
     coding_df2,
     coding_df2 |> dplyr::slice(1)
   )
@@ -52,9 +52,23 @@ test_that("convert_to_episodes", {
     convert_to_episodes(coding_df)
   })
 
-  x = convert_to_episodes(coding_df)
+  x <- convert_to_episodes(coding_df)
 
   expect_true(all(names(x) %in% c("episodes", "coding", "metadata")))
+
+  expected_cols <- c(
+    "id",
+    "subject",
+    "emotion",
+    "start_frame",
+    "end_frame",
+    "start_time",
+    "end_time",
+    "duration_s",
+    "run_id",
+    "n_frames"
+  )
+  expect_true(all(expected_cols %in% names(x$episodes)))
 
   # checking that all there is 1 episode per status row
   expect_true(sum(x$coding$status, na.rm = TRUE) == nrow(x$episodes))
@@ -114,13 +128,13 @@ test_that("convert_to_episodes", {
     convert_to_episodes(coding_df2, consecutive_missing = 1.5),
     "`consecutive_missing` must be a non-negative integer scalar."
   )
-  x = convert_to_episodes(coding_df2 |> dplyr::select(-id))
+  x <- convert_to_episodes(coding_df2 |> dplyr::select(-id))
 
   expect_true("id" %in% names(x$coding))
   expect_true(
     max(x$coding$id, na.rm = TRUE) == 1
   )
-  x = convert_to_episodes(coding_df2 |> dplyr::select(-subject))
+  x <- convert_to_episodes(coding_df2 |> dplyr::select(-subject))
   expect_true("subject" %in% names(x$coding))
   expect_true(
     identical(

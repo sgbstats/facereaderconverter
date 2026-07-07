@@ -24,4 +24,25 @@ test_that("delta_episodes", {
     nrow()
 
   expect_false(x1 == x2)
+
+  expected_cols <- c(
+    "id",
+    "subject",
+    "emotion",
+    "start_frame",
+    "end_frame",
+    "start_time",
+    "end_time",
+    "duration_s",
+    "run_id",
+    "n_frames"
+  )
+
+  x <- coding_df2 |>
+    add_delta_column(delta = 0.05, delta_window = 0.2, fps = 30) |>
+    delta_episodes()
+  expect_true(all(
+    expected_cols %in%
+      names(x)
+  ))
 })

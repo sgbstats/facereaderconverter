@@ -14,7 +14,7 @@ delta_episodes(coding, fps = 30L, cores = 0L)
 \item{cores}{integer Number of threads to use. Default 0 is auto.}
 }
 \value{
-episodes {data.table of detected episodes with columns \code{start_frame}, \code{end_frame}, \code{n_frames}, \code{duration_s}, \code{id}, \code{subject}, \code{emotion}, and \code{run_id}.}
+episodes data.table of detected episodes with columns \code{start_frame}, \code{end_frame},\code{start_time}, \code{end_time}, \code{n_frames}, \code{duration_s}, \code{id}, \code{subject}, \code{emotion}, and \code{run_id}.
 }
 \description{
 Add create delta episodes

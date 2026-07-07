@@ -3,7 +3,7 @@
 #' @param coding Data frame with columns: id, subject, emotion, frame (or video_time), value, or an `fr_coding` object
 #' @param fps Frames per second
 #' @param cores integer Number of threads to use. Default 0 is auto.
-#' @return episodes {data.table of detected episodes with columns \code{start_frame}, \code{end_frame}, \code{n_frames}, \code{duration_s}, \code{id}, \code{subject}, \code{emotion}, and \code{run_id}.}
+#' @return episodes data.table of detected episodes with columns \code{start_frame}, \code{end_frame},\code{start_time}, \code{end_time}, \code{n_frames}, \code{duration_s}, \code{id}, \code{subject}, \code{emotion}, and \code{run_id}.
 #' @examples
 #' \dontrun{
 #' coding_df = read.csv("testdata_detailed.csv")
@@ -38,6 +38,8 @@ delta_episodes <- function(
     .(
       start_frame = first(frame),
       end_frame = last(frame),
+      start_time = first(video_time),
+      end_time = last(video_time),
       n_frames = .N,
       duration_s = .N / fps
     ),
