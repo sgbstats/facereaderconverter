@@ -16,7 +16,7 @@
 #' @return A list with four elements:
 #' \describe{
 #'   \item{episodes}{data.table of detected episodes with columns \code{start_frame}, \code{end_frame}, \code{n_frames}, \code{duration_s}, \code{id}, \code{subject}, \code{emotion}, \code{start_time}, \code{end_time}, \code{run_id}, and \code{max_value}.}
-#'   \item{deltas}{data.table of delta-up reaction events with the same columns as \code{episodes}, except \code{delta_id} replaces \code{run_id}.}
+#'   \item{deltas}{data.table of delta-up reaction events with the same columns as \code{episodes}, except \code{delta_id} replaces \code{run_id}, and with \code{max_delta}, the value range from one delta window before the event start through the event end.}
 #'   \item{coding}{Annotated data.table containing the original columns plus \code{id}, \code{subject}, \code{emotion}, \code{value}, \code{delta}, \code{delta_id}, \code{run_id}, \code{status}, and \code{in_state}. \code{status} marks episode boundaries with \code{1L} at the start frame and \code{0L} at the end frame; \code{in_state} is \code{TRUE} for frames inside detected episodes.}
 #'   \item{metadata}{Metadata used to create the returned object.}
 #' }
@@ -247,20 +247,25 @@ convert_to_episodes <- function(
     episodes[, max_value := numeric()]
   }
 
+  dt[, source_row := .I]
+  dt[, group_start_row := first(source_row), by = .(id, subject, emotion)]
   dt[,
-    delta_start_frame := {
+    c("delta_start_frame", "delta_start_row") := {
       hit <- which(delta == 1L)
-      starts <- rep(NA_integer_, .N)
+      start_frame <- rep(NA_integer_, .N)
+      start_row <- rep(NA_integer_, .N)
       if (length(hit) > 0L) {
         for (hit_idx in hit) {
           window <- seq.int(max(1L, hit_idx - k), hit_idx)
           valid <- window[!is.na(value[window])]
           if (length(valid) > 0L) {
-            starts[hit_idx] <- frame[valid[[which.min(value[valid])]]]
+            min_idx <- valid[[which.min(value[valid])]]
+            start_frame[hit_idx] <- frame[[min_idx]]
+            start_row[hit_idx] <- source_row[[min_idx]]
           }
         }
       }
-      starts
+      list(start_frame, start_row)
     },
     by = .(id, subject, emotion)
   ]
@@ -270,6 +275,7 @@ convert_to_episodes <- function(
       by = .(id, subject, emotion)
     ]
   }
+  dt[, source_row := .I]
   dt[,
     delta_run := data.table::rleid(delta == 1L),
     by = .(id, subject, emotion)
@@ -285,6 +291,13 @@ convert_to_episodes <- function(
           min(delta_start_frame, na.rm = TRUE)
         },
         end_frame = last(frame),
+        start_row = if (all(is.na(delta_start_row))) {
+          NA_integer_
+        } else {
+          min(delta_start_row, na.rm = TRUE)
+        },
+        end_row = last(source_row),
+        group_start_row = first(group_start_row),
         start_time = first(delta_start_time),
         end_time = last(video_time)
       ),
@@ -300,6 +313,13 @@ convert_to_episodes <- function(
           min(delta_start_frame, na.rm = TRUE)
         },
         end_frame = last(frame),
+        start_row = if (all(is.na(delta_start_row))) {
+          NA_integer_
+        } else {
+          min(delta_start_row, na.rm = TRUE)
+        },
+        end_row = last(source_row),
+        group_start_row = first(group_start_row),
         start_time = NA,
         end_time = NA
       ),
@@ -311,6 +331,15 @@ convert_to_episodes <- function(
   deltas <- deltas[n_frames > 1L]
   deltas[, delta_id := as.integer(.I)]
   deltas[, duration_s := n_frames / fps]
+  deltas[,
+    max_delta := max_delta_ranges(
+      dt$value,
+      start_row,
+      end_row,
+      group_start_row,
+      k
+    )
+  ]
 
   dt[, `:=`(
     status = NA_integer_,
@@ -355,8 +384,11 @@ convert_to_episodes <- function(
         "state_run",
         "delta_run",
         "delta_start_frame",
+        "delta_start_row",
         "delta_start_time",
-        "delta_range_id"
+        "delta_range_id",
+        "source_row",
+        "group_start_row"
       ),
       names(dt)
     ) := NULL
@@ -367,6 +399,7 @@ convert_to_episodes <- function(
   if ("delta_run" %in% names(deltas)) {
     deltas[, delta_run := NULL]
   }
+  deltas[, c("start_row", "end_row", "group_start_row") := NULL]
   episodes <- episodes[, .(
     id,
     subject,
@@ -391,7 +424,8 @@ convert_to_episodes <- function(
     end_time,
     duration_s,
     delta_id,
-    n_frames
+    n_frames,
+    max_delta
   )]
 
   coding_cols <- unique(c(

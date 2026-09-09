@@ -25,7 +25,8 @@ test_that("convert_to_episodes returns deltas and delta_id links", {
       "end_time",
       "duration_s",
       "delta_id",
-      "n_frames"
+      "n_frames",
+      "max_delta"
     ) %in%
       names(converted$deltas)
   ))
