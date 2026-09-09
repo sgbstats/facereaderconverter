@@ -20,6 +20,7 @@ utils::globalVariables(c(
   "emotion",
   "eligible_start_frame",
   "episode_id",
+  "everything",
   "frame",
   "hh",
   "i.delta_id",

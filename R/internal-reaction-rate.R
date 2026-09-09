@@ -36,9 +36,10 @@ prepare_reaction_rate_inputs <- function(
     stop("`fps` must be a positive integer scalar.", call. = FALSE)
   }
   if (
-    !is.numeric(time_limit) ||
-      !is_reaction_rate_scalar(time_limit) ||
-      time_limit <= 0
+    !is.null(time_limit) &&
+      (!is.numeric(time_limit) ||
+        !is_reaction_rate_scalar(time_limit) ||
+        time_limit <= 0)
   ) {
     stop("`time_limit` must be a numeric scalar > 0.", call. = FALSE)
   }
@@ -95,6 +96,19 @@ prepare_reaction_rate_inputs <- function(
       paste0(
         "`constraint_method` must be one of: ",
         '"strict", "episode", "loose", "frames".'
+      ),
+      call. = FALSE
+    )
+  }
+  if (
+    constraint_method != "episode" &&
+      is.null(time_limit) &&
+      is.null(time_limit_frames)
+  ) {
+    stop(
+      paste0(
+        "`time_limit` or `time_limit_frames` must be set when ",
+        '`constraint_method` is not "episode".'
       ),
       call. = FALSE
     )
@@ -329,7 +343,7 @@ prepare_reaction_rate_inputs <- function(
     } else {
       as.integer(time_limit_frames)
     }
-  } else if (is.infinite(time_limit)) {
+  } else if (is.null(time_limit) || is.infinite(time_limit)) {
     Inf
   } else {
     as.integer(round(time_limit * fps))
