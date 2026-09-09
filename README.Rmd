@@ -55,6 +55,8 @@ loadFRfile(
 
 Use this when you want a parsed data frame directly from a FaceReader export.
 
+**Arguments:** `inpath` is the path to a `.txt`, `.xlsx`, or `.csv` export. `values_as_numeric` controls conversion of video times and detailed FaceReader values to numeric-friendly types. `clean_names` applies `janitor::clean_names()` to column names. `fail_codes` adds `fail_code` for detailed exports (`0` for success, `1` for `FIT_FAILED`, and `2` for `FIND_FAILED`). `duplicate_timecodes_as_error` controls whether duplicate time codes stop processing (`TRUE`) or produce a warning (`FALSE`). `sheet` selects the Excel sheet when `inpath` is an `.xlsx` file. Additional arguments in `...` are passed to the underlying reader; for CSV files they are passed to `readr::read_csv()`.
+
 ### `convertFRFiles()`
 
 `convertFRFiles()` reads a single FaceReader `.txt` file, skips the metadata header, guesses the delimiter, and writes a `.csv` with the same basename unless `return_data = TRUE`.
@@ -70,6 +72,8 @@ convertFRFiles(
 ```
 
 When `values_as_numeric = TRUE`, the `Video Time` column is converted to `hms` time and detailed-file values are converted to numeric where possible. When `clean_names = TRUE`, the output names are converted with `janitor::clean_names()`.
+
+**Arguments:** `inpath` is the path to one existing `.txt` file. `outpath` determines the output location and basename; it defaults to the input path with a `.csv` extension. `return_data` returns the parsed data invisibly instead of writing a CSV and returning import metadata. `values_as_numeric`, `clean_names`, `fail_codes`, and `duplicate_timecodes_as_error` have the same meanings as in `loadFRfile()`. Additional arguments in `...` are passed to `janitor::clean_names()` when names are cleaned.
 
 ### `convertFRExcelFiles()`
 
@@ -88,6 +92,8 @@ convertFRExcelFiles(
 
 When `return_data = FALSE`, the function returns metadata about the workbook import.
 
+**Arguments:** `inpath` is the path to one existing `.xlsx` file. `return_data` controls whether the parsed data (`TRUE`) or import metadata (`FALSE`) is returned invisibly. `values_as_numeric`, `clean_names`, `fail_codes`, and `duplicate_timecodes_as_error` have the same meanings as for the text importer. `sheet` is a positive sheet number, starting at `1`; the default is the first sheet. Additional arguments in `...` are passed to `janitor::clean_names()` when names are cleaned.
+
 ### `convertFRDirectory()`
 
 `convertFRDirectory()` processes all `.txt` files in a directory and returns metadata invisibly.
@@ -103,7 +109,9 @@ convertFRDirectory(
 )
 ```
 
-Useful arguments include `recursive` for searching subdirectories, `pattern` for filtering file names, `metadata_filename` for the output metadata file, and `duplicate_timecodes_as_error` for handling repeated time codes. The metadata output includes success and failure status columns.
+**Arguments:** `inpath` is the source directory. `outpath` is the destination directory and defaults to `inpath`; when different, the input folder structure is reproduced below it. `recursive` controls whether nested directories are searched. `pattern` optionally restricts file names using a regular expression; `NULL` processes all lowercase `.txt` files. `values_as_numeric`, `clean_names`, `fail_codes`, and `duplicate_timecodes_as_error` are passed to `convertFRFiles()`. `save_metadata` is the directory in which the metadata CSV is saved, or `NULL` to skip saving it. `metadata_filename` sets that CSV's filename. `cores` controls parallel workers; `0` automatically selects a worker count. Additional arguments in `...` are passed to `convertFRFiles()`.
+
+The returned metadata contains `status` (`"Success"` or `"Fail"`) and an `error` message column. Files that fail are recorded rather than stopping the whole directory conversion.
 
 ## Episode coding
 
@@ -157,6 +165,30 @@ res$coding
 
 Episodes are grouped within each `id`, `subject`, and `emotion` combination. Episode end frames are adjusted to the last in-state frame with a non-missing `value`, and episodes shorter than the minimum duration are removed. Delta rows are tracked separately for downstream functions such as `reaction_rate()`.
 
+**Arguments:** `coding_df` is a data frame containing `id`, `subject`, and either `video_time` or `frame`, plus either long-format `emotion` and `value` columns or wide emotion columns. `T_up` and `T_down` are probabilities in `[0, 1]`; `T_up` must be at least `T_down`. `delta` is the positive minimum change used to flag delta-up rows. `delta_window` is the positive time window in seconds used to determine the lag for that change. `min_dur_sec` removes episodes shorter than this duration. `consecutive_missing` is the maximum number of consecutive missing frames tolerated while an episode is active. `fps` is the positive integer sampling rate used to convert times and durations. `cores` sets the `data.table` thread count; `0` uses its automatic setting.
+
+
+## Delta helpers
+
+### `add_delta_column()`
+
+`add_delta_column()` adds or replaces a frame-level `delta` column containing the delta-up signal. It is deprecated because `convert_to_episodes()` now calculates and returns the same signal as part of its `fr_coding` result; use `convert_to_episodes()` for new workflows.
+
+**Arguments:** `coding` is a raw data frame or an `fr_coding` object. A raw table should contain `emotion` and `value` in long format, or wide emotion columns, plus `frame` or `video_time`; missing `id` and `subject` columns are filled with defaults. `delta` is the positive minimum change required for a delta-up event. `delta_window` is the time window in seconds used to calculate the lag between observations. `fps` is the positive integer sampling rate used to convert `video_time` to frames. `cores` controls the `data.table` thread count; `0` uses its automatic setting.
+
+The function returns a `data.table`. When an `fr_coding` object is supplied, its `coding` component is used and its stored `fps` is applied.
+
+### `delta()`
+
+`delta()` is a deprecated alias for `add_delta_column()` and accepts the same arguments and returns the same result. Use `convert_to_episodes()` instead of either legacy helper.
+
+**Arguments:** `coding`, `delta`, `delta_window`, `fps`, and `cores` have the same meanings as in `add_delta_column()`.
+
+### `delta_episodes()`
+
+`delta_episodes()` groups consecutive rows where `delta == 1` into delta-event episodes. It is intended for a coding table containing `id`, `subject`, `emotion`, `frame`, `video_time`, `value`, and `delta` columns, and returns a `data.table` of event spans. Episode endpoints are adjusted to the last frame with a non-missing `value` when possible.
+
+**Arguments:** `coding` is a coding table with a precomputed `delta` column; unlike `add_delta_column()`, this function does not calculate the delta signal. `fps` is the positive sampling rate used to calculate durations. `cores` controls the `data.table` thread count; `0` uses its automatic setting.
 
 ## Downstream analysis
 
@@ -169,34 +201,12 @@ Episodes are grouped within each `id`, `subject`, and `emotion` combination. Epi
 ```{r synchrony-example, eval = FALSE}
 library(facereaderconverter)
 
-coding <- data.table::data.table(
-  id = rep(1L, 6),
-  subject = rep(c("teen", "parent"), each = 3),
-  emotion = "happy",
-  video_time = rep(1:3, 2),
-  value = c(0.1, 0.2, 0.3, 0.1, 0.2, 0.3),
-  in_state = c(FALSE, TRUE, FALSE, FALSE, FALSE, TRUE),
-  run_id = c(1L, 1L, 1L, 2L, 2L, 2L)
-)
-
-episodes <- data.table::data.table(
-  id = 1L,
-  subject = c("teen", "parent"),
-  emotion = "happy",
-  run_id = c(1L, 2L),
-  start_frame = c(2L, 3L),
-  end_frame = c(2L, 3L)
-)
-
-coded_data <- structure(
-  list(coding = coding, episodes = episodes),
-  class = c("fr_coding", "list")
-)
-
 synchrony(coded_data, missing_threshold = 0.5)
 ```
 
 The result reports denominator and numerator subjects, the emotion, the number of episodes, and synchrony. The `id` column keeps the same type as the input data.
+
+**Arguments:** `coded_data` is the `fr_coding` object returned by `convert_to_episodes()`. `subject` and `id` name the subject and case/dyad columns in both `coded_data$coding` and `coded_data$episodes`. `missing_threshold` is a proportion from `0` to `1`; an episode is retained only when the comparison subject is present for at least that proportion of its frames. `exclude_emotions` lists emotions omitted from denominator episodes and defaults to `"neutral"`.
 
 ### `synchrony_by_episode()`
 
@@ -210,6 +220,8 @@ synchrony_by_episode(coded_data, missing_threshold = 0.5)
 
 Use this when you need the underlying episode-level matches rather than the aggregated synchrony summary.
 
+**Arguments:** `coded_data`, `subject`, `id`, `missing_threshold`, and `exclude_emotions` have the same meanings as in `synchrony()`. This function returns the unaggregated comparison rows, including the matched subjects, `run_id`, presence proportion, and logical synchrony result.
+
 ### `reaction_rate()`
 
 `reaction_rate()` estimates the proportion of eligible episodes that contain at least one delta reaction after an initial exclusion window.
@@ -217,20 +229,12 @@ Use this when you need the underlying episode-level matches rather than the aggr
 ```{r reaction-rate-example, eval = FALSE}
 library(facereaderconverter)
 
-coded_data <- data.table::data.table(
-  id = rep(1L, 8),
-  subject = rep(c("teen", "parent"), each = 4),
-  emotion = "happy",
-  frame = rep(1:4, 2),
-  delta = c(1L, 1L, 0L, 1L, 0L, 1L, 1L, 0L),
-  in_state = rep(c(TRUE, TRUE, FALSE, FALSE), 2),
-  run_id = c(1L, 1L, NA, NA, 2L, 2L, NA, NA)
-)
-
 reaction_rate(coded_data, fps = 30)
 ```
 
 This is useful when you want a simple summary of reaction frequency by subject and emotion.
+
+**Arguments:** `coded_data` must contain the episode and delta tables produced by `convert_to_episodes()`. `time_limit` is the maximum window length in seconds. `time_limit_frames`, when supplied, overrides `time_limit`. `constraint_method` determines the window endpoint: `"strict"` uses the earlier endpoint, `"episode"` uses the observed episode endpoint, `"loose"` uses the later endpoint, and `"frames"` uses only the requested limit. `exclude_start` omits reactions during the initial delay in seconds; `exclude_start_frames` overrides it when supplied. `fps` converts seconds to frames when needed. `subject_names` optionally restricts the compared subjects; `NULL` uses all subjects. `exclude_emotions` omits denominator emotions. `minimum_threshold` requires this proportion of non-missing numerator values in the constrained window.
 
 ### `reaction_rate_by_episode()`
 
@@ -243,6 +247,8 @@ reaction_rate_by_episode(coded_data, fps = 30)
 ```
 
 Use this when you need to inspect which specific episodes contributed to the aggregated reaction-rate summary.
+
+**Arguments:** `coded_data`, `time_limit`, `time_limit_frames`, `constraint_method`, `exclude_start`, `exclude_start_frames`, `fps`, `subject_names`, `exclude_emotions`, and `minimum_threshold` have the same meanings as in `reaction_rate()`. The result retains one row per denominator episode so the window and reaction decision can be inspected.
 
 
 ### `locf()`
@@ -268,6 +274,8 @@ locf(fr)
 
 Use this when short missing stretches should inherit the most recent non-missing run assignment.
 
+**Arguments:** `coding` is either a coding table or an `fr_coding` object. `fps` is the sampling rate used for episode durations; an `fr_coding` object's stored value takes precedence. `consecutive_missing` limits how far LOCF assignments may continue after the last in-state frame; `NULL` uses the value stored in an `fr_coding` object, or leaves the limit unset for a raw table.
+
 ## Utilities
 
 ### `to_seconds()`
@@ -286,6 +294,8 @@ c(
 
 Use this when you need a numeric time variable for plotting or joining.
 
+**Arguments:** `x` is a character vector of `hh:mm:ss` or `hh:mm:ss.fraction` values. `digits` is the non-negative number of fractional digits to retain; fractional values are truncated or right-padded, and `0` discards them.
+
 ### `parse_time_to_frame()`
 
 `parse_time_to_frame()` converts timestamps to frame indices at a given sampling rate. It accepts `HH:MM:SS`, `MM:SS`, or plain seconds.
@@ -297,6 +307,8 @@ parse_time_to_frame(c("00:00:10.5", "1:23.5", "83.5"), fps = 30)
 ```
 
 This is the helper used internally when `video_time` is present but `frame` is not.
+
+**Arguments:** `video_time` is a character or numeric vector containing `HH:MM:SS`, `MM:SS`, or seconds. `fps` is the sampling rate; each result is `round(seconds * fps)` and returned as an integer frame index.
 
 ### `map_paths()`
 
@@ -314,6 +326,8 @@ map_paths(
   )
 )
 ```
+
+**Arguments:** `input_dir` is the source root, `output_dir` is the destination root, and `files` is a character vector of paths under `input_dir`. The relative structure beneath `input_dir` is preserved, destination directories are created as needed, and paths outside the source root cause an error.
 
 This is useful when converting a directory of files into a parallel output tree.
 

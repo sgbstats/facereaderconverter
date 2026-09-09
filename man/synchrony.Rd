@@ -8,6 +8,10 @@ synchrony(
   coded_data,
   subject = "subject",
   id = "id",
+  time_limit = 3,
+  time_limit_frames = NULL,
+  constraint_method = "episode",
+  fps = 30L,
   missing_threshold = 0,
   exclude_emotions = "neutral"
 )
@@ -20,6 +24,20 @@ synchrony(
 
 \item{id}{Character scalar giving the column in \code{coded_data$coding} and
 \code{coded_data$episodes} that identifies the case or dyad. Default is \code{"id"}.}
+
+\item{time_limit}{Maximum episode-window length in seconds. \code{NULL} is
+allowed when \code{time_limit_frames} is supplied or when \code{constraint_method}
+is \code{"episode"}. Default is \code{3}.}
+
+\item{time_limit_frames}{Optional maximum episode-window length in frames.
+If supplied, this takes precedence over \code{time_limit}.}
+
+\item{constraint_method}{Character scalar controlling how the episode window
+ends: \code{"strict"}, \code{"episode"}, \code{"loose"}, or \code{"frames"}. Default is
+\code{"episode"}.}
+
+\item{fps}{Frames per second used to convert \code{time_limit} to frames.
+Default is \code{30}.}
 
 \item{missing_threshold}{Numeric scalar in \verb{[0, 1]}. Denominator and numerator episodes are
 kept only when the comparison subject is present for at least this

@@ -5,6 +5,16 @@
 #'   `coded_data$episodes` that identifies the subject. Default is `"subject"`.
 #' @param id Character scalar giving the column in `coded_data$coding` and
 #'   `coded_data$episodes` that identifies the case or dyad. Default is `"id"`.
+#' @param time_limit Maximum episode-window length in seconds. `NULL` is
+#'   allowed when `time_limit_frames` is supplied or when `constraint_method`
+#'   is `"episode"`. Default is `3`.
+#' @param time_limit_frames Optional maximum episode-window length in frames.
+#'   If supplied, this takes precedence over `time_limit`.
+#' @param constraint_method Character scalar controlling how the episode window
+#'   ends: `"strict"`, `"episode"`, `"loose"`, or `"frames"`. Default is
+#'   `"episode"`.
+#' @param fps Frames per second used to convert `time_limit` to frames.
+#'   Default is `30`.
 #' @param missing_threshold Numeric scalar in `[0, 1]`. Denominator and numerator episodes are
 #'   kept only when the comparison subject is present for at least this
 #'   proportion of frames within the episode. Default is `0`.
@@ -44,6 +54,10 @@ synchrony <- function(
   coded_data,
   subject = "subject",
   id = "id",
+  time_limit = 3,
+  time_limit_frames = NULL,
+  constraint_method = "episode",
+  fps = 30L,
   missing_threshold = 0,
   exclude_emotions = "neutral"
 ) {
@@ -51,6 +65,10 @@ synchrony <- function(
     coded_data = coded_data,
     subject = subject,
     id = id,
+    time_limit = time_limit,
+    time_limit_frames = time_limit_frames,
+    constraint_method = constraint_method,
+    fps = fps,
     missing_threshold = missing_threshold,
     exclude_emotions = exclude_emotions
   )
@@ -69,10 +87,13 @@ synchrony <- function(
     return(empty_result)
   }
 
-  out <- episode_table[, .(
-    n_episodes = .N,
-    numerator_count = sum(synchrony)
-  ), by = .(id, denominator, numerator, emotion)]
+  out <- episode_table[,
+    .(
+      n_episodes = .N,
+      numerator_count = sum(synchrony)
+    ),
+    by = .(id, denominator, numerator, emotion)
+  ]
 
   base_grid <- unique(inputs$episodes[, .(id, denominator = subject, emotion)])
   base_grid <- merge(
@@ -92,11 +113,13 @@ synchrony <- function(
     sort = FALSE
   )
   out[is.na(n_episodes), `:=`(n_episodes = 0L, numerator_count = 0L)]
-  out[, synchrony := ifelse(
-    n_episodes > 0L,
-    numerator_count / n_episodes,
-    NA_real_
-  )]
+  out[,
+    synchrony := ifelse(
+      n_episodes > 0L,
+      numerator_count / n_episodes,
+      NA_real_
+    )
+  ]
   out[, `:=`(
     n_episodes = as.integer(n_episodes),
     synchrony = as.numeric(synchrony)
@@ -117,7 +140,8 @@ synchrony <- function(
 #' @inheritParams synchrony
 #'
 #' @return A data.table with columns `id`, `denominator`, `numerator`,
-#'   `emotion`, `run_id`, `present_prop`, and `synchrony`.
+#'   `emotion`, `run_id`, `start_frame`, `end_frame`, `present_prop`, and
+#'   `synchrony`.
 #' @examples
 #' library(data.table)
 #'
@@ -149,6 +173,10 @@ synchrony_by_episode <- function(
   coded_data,
   subject = "subject",
   id = "id",
+  time_limit = 3,
+  time_limit_frames = NULL,
+  constraint_method = "episode",
+  fps = 30L,
   missing_threshold = 0,
   exclude_emotions = "neutral"
 ) {
@@ -156,6 +184,10 @@ synchrony_by_episode <- function(
     coded_data = coded_data,
     subject = subject,
     id = id,
+    time_limit = time_limit,
+    time_limit_frames = time_limit_frames,
+    constraint_method = constraint_method,
+    fps = fps,
     missing_threshold = missing_threshold,
     exclude_emotions = exclude_emotions
   )

@@ -54,14 +54,25 @@ test_that("reaction_rate constraint methods keep episode counts stable on test d
   expect_true(all(nzchar(results[[1L]][["denominator"]])))
   expect_true(all(nzchar(results[[1L]][["numerator"]])))
 
+  # strict < episode
   expect_true(all(
     results[[1L]][["n_reactions"]] <= results[[2L]][["n_reactions"]]
   ))
+  # strict < frames
   expect_true(all(
     results[[1L]][["n_reactions"]] <= results[[3L]][["n_reactions"]]
   ))
+  # strict < loose
   expect_true(all(
     results[[1L]][["n_reactions"]] <= results[[4L]][["n_reactions"]]
+  ))
+  #strict < loose
+  expect_true(all(
+    results[[2L]][["n_reactions"]] <= results[[4L]][["n_reactions"]]
+  ))
+  #strict < frames
+  expect_true(all(
+    results[[2L]][["n_reactions"]] <= results[[3L]][["n_reactions"]]
   ))
   expect_true(any(results[[2L]][["reaction_rate"]] < 1))
 

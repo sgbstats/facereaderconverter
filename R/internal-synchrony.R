@@ -2,6 +2,10 @@ prepare_synchrony_inputs <- function(
   coded_data,
   subject = "subject",
   id = "id",
+  time_limit = 3,
+  time_limit_frames = NULL,
+  constraint_method = "episode",
+  fps = 30L,
   missing_threshold = 0,
   exclude_emotions = "neutral"
 ) {
@@ -20,6 +24,55 @@ prepare_synchrony_inputs <- function(
     )
   }
 
+  if (!is.numeric(fps) || !is_scalar(fps) || fps <= 0) {
+    stop("`fps` must be a positive numeric scalar.", call. = FALSE)
+  }
+  if (
+    !is.null(time_limit) &&
+      (!is.numeric(time_limit) || !is_scalar(time_limit) || time_limit <= 0)
+  ) {
+    stop("`time_limit` must be a numeric scalar > 0 or `NULL`.", call. = FALSE)
+  }
+  if (
+    !is.null(time_limit_frames) &&
+      !(is.numeric(time_limit_frames) &&
+        is_scalar(time_limit_frames) &&
+        (is.infinite(time_limit_frames) ||
+          (abs(time_limit_frames - round(time_limit_frames)) <
+            .Machine$double.eps^0.5 &&
+            time_limit_frames > 0)))
+  ) {
+    stop(
+      "`time_limit_frames` must be a positive integer scalar, `Inf`, or `NULL`.",
+      call. = FALSE
+    )
+  }
+  if (
+    !is.character(constraint_method) ||
+      !is_scalar(constraint_method) ||
+      !constraint_method %in% c("strict", "episode", "loose", "frames")
+  ) {
+    stop(
+      paste0(
+        "`constraint_method` must be one of: ",
+        '"strict", "episode", "loose", "frames".'
+      ),
+      call. = FALSE
+    )
+  }
+  if (
+    constraint_method != "episode" &&
+      is.null(time_limit) &&
+      is.null(time_limit_frames)
+  ) {
+    stop(
+      paste0(
+        "`time_limit` or `time_limit_frames` must be set when ",
+        '`constraint_method` is not "episode".'
+      ),
+      call. = FALSE
+    )
+  }
   if (
     !is.numeric(missing_threshold) ||
       !is_scalar(missing_threshold) ||
@@ -64,6 +117,15 @@ prepare_synchrony_inputs <- function(
 
   coding <- data.table::as.data.table(coded_data$coding)
   episodes <- data.table::as.data.table(coded_data$episodes)
+  if (!"frame" %in% names(coding)) {
+    coding[,
+      frame := if (is.numeric(video_time)) {
+        as.integer(video_time)
+      } else {
+        parse_time_to_frame(video_time, fps = fps)
+      }
+    ]
+  }
 
   required_coding <- c(
     id,
@@ -137,16 +199,39 @@ prepare_synchrony_inputs <- function(
     numerator = character(),
     emotion = character(),
     run_id = integer(),
+    start_frame = integer(),
+    end_frame = integer(),
     present_prop = numeric(),
     synchrony = logical()
   )
+
+  limit_frames <- if (!is.null(time_limit_frames)) {
+    if (is.infinite(time_limit_frames)) Inf else as.integer(time_limit_frames)
+  } else if (is.null(time_limit) || is.infinite(time_limit)) {
+    Inf
+  } else {
+    as.integer(round(time_limit * fps))
+  }
+  if (
+    constraint_method %in% c("loose", "frames") && is.infinite(limit_frames)
+  ) {
+    stop(
+      paste0(
+        "`time_limit` or `time_limit_frames` cannot be infinite when ",
+        '`constraint_method` is "loose" or "frames".'
+      ),
+      call. = FALSE
+    )
+  }
 
   if (length(keep_emotions) == 0L) {
     return(list(
       coding = coding[0],
       episodes = episodes[0],
       empty_episode_result = empty_episode_result,
-      missing_threshold = missing_threshold
+      missing_threshold = missing_threshold,
+      limit_frames = limit_frames,
+      constraint_method = constraint_method
     ))
   }
 
@@ -157,7 +242,9 @@ prepare_synchrony_inputs <- function(
     coding = coding,
     episodes = episodes,
     empty_episode_result = empty_episode_result,
-    missing_threshold = missing_threshold
+    missing_threshold = missing_threshold,
+    limit_frames = limit_frames,
+    constraint_method = constraint_method
   )
 }
 
@@ -166,6 +253,8 @@ build_synchrony_episode_table <- function(inputs) {
   episodes <- inputs$episodes
   missing_threshold <- inputs$missing_threshold
   empty_episode_result <- inputs$empty_episode_result
+  limit_frames <- inputs$limit_frames
+  constraint_method <- inputs$constraint_method
 
   if (nrow(coding) < 1L || nrow(episodes) < 1L) {
     return(empty_episode_result)
@@ -190,26 +279,45 @@ build_synchrony_episode_table <- function(inputs) {
     )
   }
 
-  denominator_frames <- coding[
-    in_state == TRUE & !id %in% singleton_ids,
+  denominator_episodes <- episodes[
+    !id %in% singleton_ids,
     .(
       id,
       denominator = subject,
       emotion,
-      video_time,
-      run_id
+      run_id,
+      start_frame,
+      end_frame
     )
   ]
-  if (nrow(denominator_frames) == 0L) {
+  if (nrow(denominator_episodes) == 0L) {
     return(empty_episode_result)
   }
+  denominator_episodes[,
+    limit_end := if (is.infinite(limit_frames)) {
+      Inf
+    } else {
+      start_frame + limit_frames - 1L
+    }
+  ]
+  denominator_episodes[,
+    constraint_end := if (constraint_method == "strict") {
+      pmin(end_frame, limit_end)
+    } else if (constraint_method == "episode") {
+      end_frame
+    } else if (constraint_method == "loose") {
+      pmax(end_frame, limit_end)
+    } else {
+      limit_end
+    }
+  ]
 
   numerator_grid <- unique(coding[
     !id %in% singleton_ids,
     .(id, numerator = subject)
   ])
-  expected_frames <- numerator_grid[
-    denominator_frames,
+  expected_episodes <- numerator_grid[
+    denominator_episodes,
     on = "id",
     allow.cartesian = TRUE,
     nomatch = 0L
@@ -221,15 +329,21 @@ build_synchrony_episode_table <- function(inputs) {
       id,
       numerator = subject,
       emotion,
-      video_time,
+      frame,
       comparison_value = value,
       comparison_in_state = in_state
     )
   ]
 
+  expected_frames <- expected_episodes[,
+    .(frame = seq.int(start_frame, constraint_end)),
+    by = .(id, denominator, numerator, emotion, run_id)
+  ]
   out <- comparison_frames[
     expected_frames,
-    on = .(id, numerator, emotion, video_time)
+    on = .(id, numerator, emotion, frame),
+    nomatch = NA,
+    allow.cartesian = TRUE
   ][,
     .(
       present_prop = mean(!is.na(comparison_value)),
@@ -246,6 +360,35 @@ build_synchrony_episode_table <- function(inputs) {
     return(empty_episode_result)
   }
 
+  out <- merge(
+    out,
+    unique(expected_episodes[, .(
+      id,
+      denominator,
+      numerator,
+      emotion,
+      run_id,
+      start_frame,
+      end_frame = constraint_end
+    )]),
+    by = c("id", "denominator", "numerator", "emotion", "run_id"),
+    all.x = TRUE,
+    sort = FALSE
+  )
+  data.table::setcolorder(
+    out,
+    c(
+      "id",
+      "denominator",
+      "numerator",
+      "emotion",
+      "run_id",
+      "start_frame",
+      "end_frame",
+      "present_prop",
+      "synchrony"
+    )
+  )
   data.table::setorder(out, id, denominator, numerator, emotion, run_id)
   out
 }
