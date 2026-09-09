@@ -16,7 +16,7 @@
 #' @return A list with four elements:
 #' \describe{
 #'   \item{episodes}{data.table of detected episodes with columns \code{start_frame}, \code{end_frame}, \code{n_frames}, \code{duration_s}, \code{id}, \code{subject}, \code{emotion}, \code{start_time}, \code{end_time}, \code{run_id}, and \code{max_value}.}
-#'   \item{deltas}{data.table of delta-up reaction events with the same columns as \code{episodes}, except \code{delta_id} replaces \code{run_id}; \code{max_delta} is the range of emotion values within each delta episode.}
+#'   \item{deltas}{data.table of delta-up reaction events with the same columns as \code{episodes}, except \code{delta_id} replaces \code{run_id}.}
 #'   \item{coding}{Annotated data.table containing the original columns plus \code{id}, \code{subject}, \code{emotion}, \code{value}, \code{delta}, \code{delta_id}, \code{run_id}, \code{status}, and \code{in_state}. \code{status} marks episode boundaries with \code{1L} at the start frame and \code{0L} at the end frame; \code{in_state} is \code{TRUE} for frames inside detected episodes.}
 #'   \item{metadata}{Metadata used to create the returned object.}
 #' }
@@ -286,8 +286,7 @@ convert_to_episodes <- function(
         },
         end_frame = last(frame),
         start_time = first(delta_start_time),
-        end_time = last(video_time),
-        max_delta = NA_real_
+        end_time = last(video_time)
       ),
       by = .(id, subject, emotion, delta_run)
     ]
@@ -302,8 +301,7 @@ convert_to_episodes <- function(
         },
         end_frame = last(frame),
         start_time = NA,
-        end_time = NA,
-        max_delta = NA_real_
+        end_time = NA
       ),
       by = .(id, subject, emotion, delta_run)
     ]
@@ -313,9 +311,6 @@ convert_to_episodes <- function(
   deltas <- deltas[n_frames > 1L]
   deltas[, delta_id := as.integer(.I)]
   deltas[, duration_s := n_frames / fps]
-  if (!"max_delta" %in% names(deltas)) {
-    deltas[, max_delta := numeric()]
-  }
 
   dt[, `:=`(
     status = NA_integer_,
@@ -350,24 +345,6 @@ convert_to_episodes <- function(
       deltas,
       on = .(id, subject, emotion, delta_run),
       delta_id := i.delta_id
-    ]
-    deltas[,
-      max_delta := vapply(
-        seq_len(.N),
-        function(i) {
-          values <- dt[
-            id == deltas$id[[i]] &
-              subject == deltas$subject[[i]] &
-              emotion == deltas$emotion[[i]] &
-              frame >= deltas$start_frame[[i]] &
-              frame <= deltas$end_frame[[i]],
-            value
-          ]
-          values <- values[!is.na(values)]
-          if (length(values) == 0L) NA_real_ else max(values) - min(values)
-        },
-        numeric(1)
-      )
     ]
   }
 
@@ -414,8 +391,7 @@ convert_to_episodes <- function(
     end_time,
     duration_s,
     delta_id,
-    n_frames,
-    max_delta
+    n_frames
   )]
 
   coding_cols <- unique(c(

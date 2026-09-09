@@ -25,8 +25,7 @@ test_that("convert_to_episodes returns deltas and delta_id links", {
       "end_time",
       "duration_s",
       "delta_id",
-      "n_frames",
-      "max_delta"
+      "n_frames"
     ) %in%
       names(converted$deltas)
   ))
@@ -82,23 +81,5 @@ test_that("convert_to_episodes returns deltas and delta_id links", {
     comparison$end_frame - comparison$start_frame + 1L
   )
   expect_true(all(comparison$n_frames > 1L))
-  expect_true(all(comparison$max_delta >= 0.1))
   expect_equal(unique(unlist(comparison$delta_values)), 1L)
-  expected_max_delta <- vapply(
-    seq_len(nrow(converted$deltas)),
-    function(i) {
-      event <- converted$deltas[i]
-      values <- converted$coding[
-        id == event$id &
-          subject == event$subject &
-          emotion == event$emotion &
-          frame >= event$start_frame &
-          frame <= event$end_frame,
-        value
-      ]
-      max(values, na.rm = TRUE) - min(values, na.rm = TRUE)
-    },
-    numeric(1)
-  )
-  expect_equal(converted$deltas$max_delta, expected_max_delta)
 })

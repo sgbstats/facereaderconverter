@@ -197,6 +197,20 @@ prepare_reaction_rate_inputs <- function(
         call. = FALSE
       )
     }
+
+    if (nrow(deltas) > 0L && "delta_id" %in% names(coding)) {
+      canonical_delta_rows <- coding[
+        delta == 1L & !is.na(delta_id),
+        .(
+          start_frame = min(frame),
+          end_frame = max(frame)
+        ),
+        by = .(id, subject, emotion, delta_id)
+      ]
+      deltas <- deltas[,
+        .(id, subject, emotion, delta_id)
+      ][canonical_delta_rows, on = .(id, subject, emotion, delta_id)]
+    }
   } else {
     coding <- data.table::as.data.table(coded_data)
 
