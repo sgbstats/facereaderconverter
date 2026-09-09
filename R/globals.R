@@ -41,6 +41,8 @@ utils::globalVariables(c(
   "in_state",
   "last_true_row",
   "limit_end",
+  "max_delta",
+  "max_value",
   "mm",
   "ms",
   "n",
