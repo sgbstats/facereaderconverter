@@ -1,6 +1,10 @@
 #' Calculate synchrony from converted episodes
 #'
 #' @param coded_data Output from `convert_to_episodes()`.
+#' @param episodes Optional replacement episode data frame. It must contain the
+#'   selected ID and subject columns plus `emotion`, `run_id`, `start_frame`, and
+#'   `end_frame`. Frame bounds are inclusive. A `synchrony_by_episode()` result
+#'   is also accepted, using its `denominator` column as the episode subject.
 #' @param subject Character scalar giving the column in `coded_data$coding` and
 #'   `coded_data$episodes` that identifies the subject. Default is `"subject"`.
 #' @param id Character scalar giving the column in `coded_data$coding` and
@@ -52,6 +56,7 @@
 #' @export
 synchrony <- function(
   coded_data,
+  episodes = NULL,
   subject = "subject",
   id = "id",
   time_limit = 3,
@@ -63,6 +68,7 @@ synchrony <- function(
 ) {
   inputs <- prepare_synchrony_inputs(
     coded_data = coded_data,
+    episodes = episodes,
     subject = subject,
     id = id,
     time_limit = time_limit,
@@ -138,6 +144,8 @@ synchrony <- function(
 #' Calculate synchrony by denominator episode
 #'
 #' @inheritParams synchrony
+#' @details When `coded_data` contains metadata, its `metadata$fps` value is
+#' used by the synchrony calculations, including when `fps` is supplied.
 #'
 #' @return A data.table with columns `id`, `denominator`, `numerator`,
 #'   `emotion`, `run_id`, `start_frame`, `end_frame`, `present_prop`, and
@@ -171,6 +179,7 @@ synchrony <- function(
 #' @export
 synchrony_by_episode <- function(
   coded_data,
+  episodes = NULL,
   subject = "subject",
   id = "id",
   time_limit = 3,
@@ -182,6 +191,7 @@ synchrony_by_episode <- function(
 ) {
   inputs <- prepare_synchrony_inputs(
     coded_data = coded_data,
+    episodes = episodes,
     subject = subject,
     id = id,
     time_limit = time_limit,
@@ -191,7 +201,10 @@ synchrony_by_episode <- function(
     missing_threshold = missing_threshold,
     exclude_emotions = exclude_emotions
   )
-  build_synchrony_episode_table(inputs)
+  attach_fr_metadata(
+    build_synchrony_episode_table(inputs),
+    inputs$metadata
+  )
 }
 
 #' Map shared synchronous episodes
@@ -215,6 +228,7 @@ synchrony_by_episode <- function(
 #' @export
 shared_synchronous_episodes <- function(
   coded_data,
+  episodes = NULL,
   subject = "subject",
   id = "id",
   time_limit = 3,
@@ -226,6 +240,7 @@ shared_synchronous_episodes <- function(
 ) {
   inputs <- prepare_synchrony_inputs(
     coded_data = coded_data,
+    episodes = episodes,
     subject = subject,
     id = id,
     time_limit = time_limit,
@@ -377,5 +392,5 @@ shared_synchronous_episodes <- function(
     subject1_run_id,
     subject2_run_id
   )
-  out
+  attach_fr_metadata(out, inputs$metadata)
 }

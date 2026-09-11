@@ -1,15 +1,23 @@
 #' Export clips for shared synchronous episodes
 #'
-#' Selects shared synchronous intervals with the largest combined emotion values
-#' and exports the corresponding video segments with FFmpeg. Frame ranges are
-#' inclusive: a range from frame 0 through frame 0 has duration `1 / fps`.
+#' Selects shared synchronous intervals with the largest combined emotion values,
+#' or a named subject's highest-valued shared or individual episodes, and exports
+#' the corresponding video segments with FFmpeg. Frame ranges are inclusive: a
+#' range from frame 0 through frame 0 has duration `1 / fps`.
 #'
 #' @param coded_data A converted `fr_coding` object with `metadata$fps`.
 #' @param shared_synchrony A table returned by [shared_synchronous_episodes()].
 #' @param video_paths Named character vector of source video paths. Names must
 #'   match values in the shared-synchrony `id` column.
-#' @param n Number of highest-ranked shared intervals to export.
+#' @param n Number of highest-ranked intervals to export. Use `0` to export all
+#'   intervals remaining after filtering.
 #' @param emotion Optional character vector of emotions to retain.
+#' @param optimised_subject Subject-name regular expression used to rank clips by
+#'   one subject's maximum emotion value. Defaults to `"both"`, which ranks shared
+#'   synchronies by their combined value.
+#' @param only_synchronies Logical; when `TRUE`, select shared synchronies. When
+#'   `FALSE`, select individual episodes for `optimised_subject`. Ignored when
+#'   `optimised_subject = "both"`.
 #' @param buffer A non-negative number for a symmetric buffer, or a named
 #'   two-element vector with names `before` and `after` for asymmetric buffers.
 #'   Units are controlled by `buffer_units`.
@@ -37,6 +45,8 @@
 #'   shared,
 #'   video_paths = c("1" = "recording.mp4"),
 #'   n = 10,
+#'   optimised_subject = "child",
+#'   only_synchronies = FALSE,
 #'   buffer = c(before = 2, after = 1),
 #'   output_path = "recording-shared-clips.zip"
 #' )
@@ -48,6 +58,8 @@ export_shared_synchrony_clips <- function(
   video_paths,
   n = 10L,
   emotion = "happy",
+  optimised_subject = "both",
+  only_synchronies = TRUE,
   buffer = 0,
   buffer_units = c("seconds", "frames"),
   buffer_frames = 0L,
@@ -63,6 +75,8 @@ export_shared_synchrony_clips <- function(
     video_paths = video_paths,
     n = n,
     emotion = emotion,
+    optimised_subject = optimised_subject,
+    only_synchronies = only_synchronies,
     buffer = buffer,
     buffer_units = buffer_units,
     buffer_frames = buffer_frames,
@@ -216,6 +230,8 @@ prepare_shared_synchrony_clips <- function(
   video_paths,
   n,
   emotion,
+  optimised_subject = "both",
+  only_synchronies = TRUE,
   buffer = 0,
   buffer_units = c("seconds", "frames"),
   buffer_frames = 0L,
@@ -231,7 +247,7 @@ prepare_shared_synchrony_clips <- function(
   if (!is.numeric(fps) || length(fps) != 1L || is.na(fps) || fps <= 0) {
     stop("`coded_data$metadata$fps` must be a positive number.", call. = FALSE)
   }
-  required <- c(
+  required_shared <- c(
     "id",
     "emotion",
     "subject1",
@@ -244,7 +260,7 @@ prepare_shared_synchrony_clips <- function(
   )
   if (
     !is.data.frame(shared_synchrony) ||
-      !all(required %in% names(shared_synchrony))
+      !all(required_shared %in% names(shared_synchrony))
   ) {
     stop(
       "`shared_synchrony` is missing required shared-episode columns.",
@@ -252,9 +268,28 @@ prepare_shared_synchrony_clips <- function(
     )
   }
   if (
-    !is.numeric(n) || length(n) != 1L || is.na(n) || n < 1 || n != as.integer(n)
+    !is.numeric(n) || length(n) != 1L || is.na(n) || n < 0 || n != as.integer(n)
   ) {
-    stop("`n` must be a positive whole number.", call. = FALSE)
+    stop("`n` must be a non-negative whole number.", call. = FALSE)
+  }
+  if (
+    !is.character(optimised_subject) ||
+      length(optimised_subject) != 1L ||
+      is.na(optimised_subject) ||
+      !nzchar(optimised_subject)
+  ) {
+    stop(
+      "`optimised_subject` must be one non-empty character string.",
+      call. = FALSE
+    )
+  }
+  if (
+    !identical(optimised_subject, "both") &&
+      (!is.logical(only_synchronies) ||
+        length(only_synchronies) != 1L ||
+        is.na(only_synchronies))
+  ) {
+    stop("`only_synchronies` must be TRUE or FALSE.", call. = FALSE)
   }
   buffer_units <- match.arg(buffer_units)
   if (!is.numeric(buffer) || anyNA(buffer) || any(buffer < 0)) {
@@ -338,15 +373,93 @@ prepare_shared_synchrony_clips <- function(
     )
   }
 
-  clips <- data.table::as.data.table(data.table::copy(shared_synchrony))
+  shared_clips <- data.table::as.data.table(data.table::copy(shared_synchrony))
+  if (identical(optimised_subject, "both")) {
+    clips <- shared_clips
+    clips[, selection_value := combined_value]
+    clip_type <- "synchrony"
+  } else if (only_synchronies) {
+    subject_names <- unique(c(shared_clips$subject1, shared_clips$subject2))
+    matched_subjects <- subject_names[grepl(optimised_subject, subject_names)]
+    if (length(matched_subjects) != 1L) {
+      stop(
+        "`optimised_subject` must match exactly one subject name.",
+        call. = FALSE
+      )
+    }
+    required_values <- c("subject1_max_value", "subject2_max_value")
+    if (!all(required_values %in% names(shared_clips))) {
+      stop(
+        "`shared_synchrony` is missing required subject maximum-value columns.",
+        call. = FALSE
+      )
+    }
+    clips <- shared_clips[
+      subject1 == matched_subjects | subject2 == matched_subjects
+    ]
+    clips[,
+      selection_value := data.table::fifelse(
+        subject1 == matched_subjects,
+        subject1_max_value,
+        subject2_max_value
+      )
+    ]
+    clip_type <- "synchrony"
+  } else {
+    required_episodes <- c(
+      "id",
+      "subject",
+      "emotion",
+      "start_frame",
+      "end_frame",
+      "run_id",
+      "max_value"
+    )
+    if (
+      is.null(coded_data$episodes) ||
+        !is.data.frame(coded_data$episodes) ||
+        !all(required_episodes %in% names(coded_data$episodes))
+    ) {
+      stop(
+        "`coded_data$episodes` is missing required episode columns.",
+        call. = FALSE
+      )
+    }
+    episodes <- data.table::as.data.table(data.table::copy(coded_data$episodes))
+    subject_names <- unique(episodes$subject)
+    matched_subjects <- subject_names[grepl(optimised_subject, subject_names)]
+    if (length(matched_subjects) != 1L) {
+      stop(
+        "`optimised_subject` must match exactly one subject name.",
+        call. = FALSE
+      )
+    }
+    clips <- episodes[subject == matched_subjects]
+    data.table::setnames(
+      clips,
+      c("subject", "run_id"),
+      c("subject1", "subject1_run_id")
+    )
+    clips[, `:=`(
+      subject2 = NA_character_,
+      subject2_run_id = NA_integer_,
+      combined_value = max_value,
+      selection_value = max_value
+    )]
+    clip_type <- "episode"
+  }
   if (!is.null(emotion)) {
     selected_emotions <- emotion
     clips <- clips[emotion %in% selected_emotions]
   }
   if (nrow(clips) == 0L) {
-    stop("No shared intervals remain after filtering.", call. = FALSE)
+    stop("No intervals remain after filtering.", call. = FALSE)
   }
-  n <- min(as.integer(n), nrow(clips))
+  if (n == 0L) {
+    n <- nrow(clips)
+  } else {
+    n <- min(as.integer(n), nrow(clips))
+  }
   if (
     anyNA(clips$start_frame) ||
       anyNA(clips$end_frame) ||
@@ -354,7 +467,7 @@ prepare_shared_synchrony_clips <- function(
       any(clips$end_frame < clips$start_frame)
   ) {
     stop(
-      "Shared interval frame bounds must be non-missing, non-negative, and ordered.",
+      "Interval frame bounds must be non-missing, non-negative, and ordered.",
       call. = FALSE
     )
   }
@@ -366,7 +479,7 @@ prepare_shared_synchrony_clips <- function(
   data.table::setorderv(
     clips,
     c(
-      "combined_value",
+      "selection_value",
       "id",
       "emotion",
       "subject1",
@@ -404,16 +517,29 @@ prepare_shared_synchrony_clips <- function(
     )
   )]
   clips[,
-    clip_filename := sprintf(
-      "%03d_id-%s_%s_runs-%s-%s_frames-%s-%s.mp4",
-      selection_rank,
-      gsub("[^[:alnum:]_-]", "_", as.character(id)),
-      gsub("[^[:alnum:]_-]", "_", emotion),
-      subject1_run_id,
-      subject2_run_id,
-      start_frame,
-      end_frame
-    )
+    clip_filename := if (clip_type == "synchrony") {
+      sprintf(
+        "%03d_id-%s_%s_runs-%s-%s_frames-%s-%s.mp4",
+        selection_rank,
+        gsub("[^[:alnum:]_-]", "_", as.character(id)),
+        gsub("[^[:alnum:]_-]", "_", emotion),
+        subject1_run_id,
+        subject2_run_id,
+        start_frame,
+        end_frame
+      )
+    } else {
+      sprintf(
+        "%03d_id-%s_%s_subject-%s_run-%s_frames-%s-%s.mp4",
+        selection_rank,
+        gsub("[^[:alnum:]_-]", "_", as.character(id)),
+        gsub("[^[:alnum:]_-]", "_", emotion),
+        gsub("[^[:alnum:]_-]", "_", subject1),
+        subject1_run_id,
+        start_frame,
+        end_frame
+      )
+    }
   ]
   clips[, c("clip_path", "archive_path") := list(NA_character_, NA_character_)]
   clips

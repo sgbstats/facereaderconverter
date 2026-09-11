@@ -441,21 +441,20 @@ convert_to_episodes <- function(
     "status",
     "in_state"
   ))
-  structure(
-    list(
-      episodes = episodes,
-      deltas = deltas,
-      coding = dt[, .SD, .SDcols = coding_cols],
-      metadata = list(
-        fps = as.integer(fps),
-        consecutive_missing = consecutive_missing,
-        delta = delta_threshold,
-        delta_window = delta_window,
-        min_dur_sec = min_dur_sec,
-        T_down = T_down,
-        T_up = T_up
-      )
-    ),
-    class = c("fr_coding", "list")
+  fr_coding(
+    coding = dt[, .SD, .SDcols = coding_cols],
+    episodes = episodes,
+    deltas = deltas,
+    metadata = list(
+      schema_version = 1L,
+      fps = as.integer(fps),
+      consecutive_missing = consecutive_missing,
+      delta = delta_threshold,
+      delta_window = delta_window,
+      min_dur_sec = min_dur_sec,
+      T_down = T_down,
+      T_up = T_up,
+      cores = as.integer(cores)
+    )
   )
 }

@@ -24,9 +24,7 @@ prepare_reaction_rate_inputs <- function(
     !is.null(coded_data$coding) &&
     !is.null(coded_data$episodes)
 
-  if (is_fr_coding && !is.null(coded_data$metadata$fps)) {
-    fps <- coded_data$metadata$fps
-  }
+  fps <- resolve_fr_metadata(fps, coded_data, "fps", default = 30L)
 
   if (is.null(coded_data)) {
     stop("`coded_data` is missing required column(s): delta.", call. = FALSE)
@@ -391,8 +389,15 @@ prepare_reaction_rate_inputs <- function(
       constraint_method = constraint_method,
       subject_names = subject_names,
       exclude_emotions = exclude_emotions,
-      empty_summary_result = empty_summary_result,
-      empty_episode_result = empty_episode_result
+      empty_summary_result = attach_fr_metadata(
+        empty_summary_result,
+        get_fr_metadata(coded_data)
+      ),
+      empty_episode_result = attach_fr_metadata(
+        empty_episode_result,
+        get_fr_metadata(coded_data)
+      ),
+      metadata = get_fr_metadata(coded_data)
     ))
   }
 
@@ -406,8 +411,15 @@ prepare_reaction_rate_inputs <- function(
     constraint_method = constraint_method,
     subject_names = subject_names,
     exclude_emotions = exclude_emotions,
-    empty_summary_result = empty_summary_result,
-    empty_episode_result = empty_episode_result
+    empty_summary_result = attach_fr_metadata(
+      empty_summary_result,
+      get_fr_metadata(coded_data)
+    ),
+    empty_episode_result = attach_fr_metadata(
+      empty_episode_result,
+      get_fr_metadata(coded_data)
+    ),
+    metadata = get_fr_metadata(coded_data)
   )
 }
 

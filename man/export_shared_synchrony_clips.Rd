@@ -10,6 +10,8 @@ export_shared_synchrony_clips(
   video_paths,
   n = 10L,
   emotion = "happy",
+  optimised_subject = "both",
+  only_synchronies = TRUE,
   buffer = 0,
   buffer_units = c("seconds", "frames"),
   buffer_frames = 0L,
@@ -28,9 +30,18 @@ export_shared_synchrony_clips(
 \item{video_paths}{Named character vector of source video paths. Names must
 match values in the shared-synchrony \code{id} column.}
 
-\item{n}{Number of highest-ranked shared intervals to export.}
+\item{n}{Number of highest-ranked intervals to export. Use \code{0} to export all
+intervals remaining after filtering.}
 
 \item{emotion}{Optional character vector of emotions to retain.}
+
+\item{optimised_subject}{Subject-name regular expression used to rank clips by
+one subject's maximum emotion value. Defaults to \code{"both"}, which ranks shared
+synchronies by their combined value.}
+
+\item{only_synchronies}{Logical; when \code{TRUE}, select shared synchronies. When
+\code{FALSE}, select individual episodes for \code{optimised_subject}. Ignored when
+\code{optimised_subject = "both"}.}
 
 \item{buffer}{A non-negative number for a symmetric buffer, or a named
 two-element vector with names \code{before} and \code{after} for asymmetric buffers.
@@ -60,9 +71,10 @@ A \code{data.table} manifest invisibly. For ZIP output, the manifest is
 also included in the archive as \code{manifest.csv}.
 }
 \description{
-Selects shared synchronous intervals with the largest combined emotion values
-and exports the corresponding video segments with FFmpeg. Frame ranges are
-inclusive: a range from frame 0 through frame 0 has duration \code{1 / fps}.
+Selects shared synchronous intervals with the largest combined emotion values,
+or a named subject's highest-valued shared or individual episodes, and exports
+the corresponding video segments with FFmpeg. Frame ranges are inclusive: a
+range from frame 0 through frame 0 has duration \code{1 / fps}.
 }
 \examples{
 \dontrun{
@@ -73,6 +85,8 @@ export_shared_synchrony_clips(
   shared,
   video_paths = c("1" = "recording.mp4"),
   n = 10,
+  optimised_subject = "child",
+  only_synchronies = FALSE,
   buffer = c(before = 2, after = 1),
   output_path = "recording-shared-clips.zip"
 )
